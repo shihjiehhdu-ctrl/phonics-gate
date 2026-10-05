@@ -1,0 +1,9 @@
+# Netlify 設定：只發佈 site 資料夾。這個測驗沒有伺服器端函式。
+[build]
+  publish = "site"
+
+# 圖片和錄音讓瀏覽器暫存一小時，作答時不必每題重新下載；重做的素材最慢一小時後生效。
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"

@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>中文家庭雙語小孩─Phonics 入門門檻測驗</title>
+<style>
+:root{--bg:#f6f3ec;--ink:#22303c;--muted:#6b7780;--card:#fff;--line:#d9d3c5;--accent:#2f6fb0;--accent-ink:#fff;--ok:#2e8b57;--warn:#c0392b;--soft:#e9eff6;--sel:#ffd24a}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",Arial,sans-serif;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+#app{max-width:860px;margin:0 auto;padding:16px;min-height:100%;display:flex;flex-direction:column}
+h1{font-size:1.45rem;margin:.2em 0;line-height:1.35}
+h2{font-size:1.15rem;margin:1.2em 0 .4em}
+p{line-height:1.6}
+.muted{color:var(--muted);font-size:.9rem}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:12px 0}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:12px;padding:14px 22px;font-size:1.1rem;font-weight:600}
+.btn.sec{background:var(--soft);color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.link{background:none;border:0;color:var(--accent);text-decoration:underline;padding:6px 0}
+#token{font:inherit;padding:12px 14px;border:1px solid var(--line);border-radius:10px;width:100%;max-width:240px;text-transform:uppercase}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.bar{flex:1;height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.x{background:none;border:0;color:var(--muted);font-size:1.3rem;padding:6px 10px}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;user-select:none;-webkit-user-select:none}
+.play{width:96px;height:96px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:2.6rem;display:flex;align-items:center;justify-content:center;flex:none}
+.play.on{animation:pulse .7s infinite alternate}
+@keyframes pulse{to{transform:scale(1.08);background:#4a8ed6}}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:min(560px,100%,calc(100vh - 230px));min-width:240px}
+.card{aspect-ratio:1/1;background:var(--card);border:3px solid var(--line);border-radius:18px;padding:0;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center}
+.card img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+.card .ph{padding:10px;text-align:center;font-size:1.2rem;color:var(--ink);line-height:1.4}
+.card .ph small{display:block;color:var(--muted);font-size:.7rem;margin-top:6px}
+.card:disabled{opacity:.55}
+.card.sel{border-color:var(--sel);box-shadow:0 0 0 4px var(--sel)}
+.card.right{border-color:var(--ok);box-shadow:0 0 0 4px var(--ok);opacity:1}
+.card.wrong{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.pair{display:flex;gap:28px;font-size:3rem}
+.pair span{width:84px;height:84px;border-radius:50%;background:var(--soft);display:flex;align-items:center;justify-content:center;opacity:.35}
+.pair span.on{opacity:1;background:var(--sel)}
+.sd{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:560px}
+.sd button{background:var(--card);border:3px solid var(--line);border-radius:18px;padding:22px 8px;font-size:1.3rem;font-weight:600;color:var(--ink)}
+.sd button b{display:block;font-size:2.6rem;letter-spacing:6px;margin-bottom:6px}
+.sd button:disabled{opacity:.55}
+.sd button.sel{border-color:var(--sel);box-shadow:0 0 0 4px var(--sel)}
+.sd button.right{border-color:var(--ok);box-shadow:0 0 0 4px var(--ok);opacity:1}
+.sd button.wrong{animation:shake .3s}
+.dbg{font-family:ui-monospace,Menlo,monospace;font-size:.85rem;color:var(--muted);min-height:1.2em;text-align:center}
+.tag{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.85rem;font-weight:600}
+.tag.ok{background:#dff3e6;color:var(--ok)}
+.tag.no{background:#fbe3df;color:var(--warn)}
+.note{border-left:6px solid var(--warn);background:#fbe3df;border-radius:8px;padding:10px 14px}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600}
+.scroll{overflow-x:auto}
+.verdict{border-left:6px solid var(--accent);padding:10px 14px;background:var(--soft);border-radius:8px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.big{font-size:3.4rem;text-align:center}
+.tag.mid{background:#fdf0cf;color:#8a6200}
+.tag.chk{background:#eceae4;color:var(--muted)}
+.grp{margin:14px 0 4px;font-weight:600}
+.grp small{display:block;font-weight:400;color:var(--muted);font-size:.85rem;margin-top:2px}
+.st{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.st:last-child{border-bottom:0}
+.st .nm small{display:block;color:var(--muted);font-size:.82rem}
+.st .ct{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.st .meter{grid-column:1/-1;position:relative;height:12px;background:#ebe7dc;border-radius:6px}
+.st .meter i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--accent)}
+.st .meter u{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--ink);border-radius:2px}
+.explain p{margin:.5em 0}
+form label{display:block;margin:12px 0 4px;font-weight:600}
+form input[type=text],form input[type=email],form select{font:inherit;padding:12px 14px;border:1px solid var(--line);border-radius:10px;width:100%;max-width:360px;background:#fff;text-transform:none}
+form .chk{display:flex;gap:10px;align-items:flex-start;font-weight:400;margin:12px 0 0;line-height:1.5}
+form .chk input{margin-top:5px;flex:none}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+ol.steps{padding-left:1.3em;line-height:1.8;margin:.4em 0}
+.cta{text-align:center}
+.cta a{display:inline-block;text-decoration:none}
+details summary{cursor:pointer;color:var(--accent)}
+.explain ul{margin:.3em 0 .6em;padding-left:1.2em;line-height:1.6}
+.err{color:var(--warn)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="config.js"></script>
+<script src="data/items.js"></script>
+<script>
+(function(){
+"use strict";
+const CFG = Object.assign({SHEET_API:"", ALLOW_INCOMPLETE_ASSETS:false, REGISTRATION_OPEN:false, BOOKING_URL:"", CONTACT_EMAIL:"", imageDir:"assets/images/", audioDir:"assets/audio/", wordRate:0.85, sentenceRate:0.85}, window.GATE_CONFIG||{});
+const API = /^https?:\/\//.test(CFG.SHEET_API) ? CFG.SHEET_API : "";
+const G = window.GATE, app = document.getElementById("app");
+const qs = new URLSearchParams(location.search);
+const LOCAL = location.protocol==="file:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+const FAST = LOCAL && qs.get("fast")==="1";
+const TOKEN_Q = (qs.get("t")||"").trim().toUpperCase();     // 信裡的專屬連結帶著代碼
+const DEMO_OK = LOCAL || qs.get("demo")==="1";              // 試用版不對外公開，只有加 ?demo=1 才看得到
+const REG_OPEN = CFG.REGISTRATION_OPEN===true || qs.get("preview")==="1";       // 只在本機測試時可用：縮短等待時間
+const TITLE = "中文家庭雙語小孩─Phonics 入門門檻測驗";
+const ZH = { A:"聽聽看，點出你聽到的圖片。", B:"你會聽到兩個聲音。一樣，就按一樣。不一樣，就按不一樣。", C:"聽一句話，點出對的圖片。" };
+const RESUME_HOURS = 12;
+
+const S = { mode:null, token:"", name:"", debug:false, startedAt:null, plan:null, idx:0, responses:[], practiceErrors:{A:0,B:0,C:0}, assets:"complete", missing:{img:0,aud:0} };
+const ITEM = {}; ["A","A_practice","B","B_practice","C","C_practice"].forEach(k => G[k].forEach(it => ITEM[it.id]=it));
+const TOTAL = G.A.length + G.B.length + G.C.length;
+
+const wait = ms => new Promise(r => setTimeout(r, FAST ? Math.min(ms, 30) : ms));
+const el = (tag, attrs={}, ...kids) => { const e=document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)) { if (k==="class") e.className=v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else if (v!==false && v!=null) e.setAttribute(k, v===true?"":v); }
+  for (const k of kids.flat()) if (k!=null && k!==false) e.append(k.nodeType?k:document.createTextNode(k)); return e; };
+const mount = (...nodes) => app.replaceChildren(...nodes.filter(Boolean));   // 略過 null，避免畫面出現「null」
+const shuffle = a => { a=a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const timeout = ms => (typeof AbortSignal!=="undefined" && AbortSignal.timeout) ? AbortSignal.timeout(ms) : undefined;
+
+/* ---------- 後端（Google 試算表 + Apps Script） ---------- */
+async function apiGet(params, ms){ const r = await fetch(API+"?"+new URLSearchParams(params), {signal:timeout(ms||15000)}); return r.json(); }
+async function apiPost(body, ms){ const r = await fetch(API, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(body), signal:timeout(ms||30000)}); return r.json(); }
+
+/* ---------- 聲音：錄音檔用 Web Audio 播放；試用版缺檔時改用瀏覽器語音 ---------- */
+let ctx=null, currentSrc=null; const buffers=new Map();
+function ensureCtx(){ const AC=window.AudioContext||window.webkitAudioContext; if(!ctx && AC){ try{ ctx=new AC(); }catch(e){} } if(ctx && ctx.state==="suspended") ctx.resume(); }
+async function loadClip(key){
+  if (buffers.has(key)) return buffers.get(key);
+  let buf=null;
+  if (ctx && location.protocol!=="file:") { try { const r=await fetch(CFG.audioDir+key+".mp3");
+    if (r.ok && !/text\/html/.test(r.headers.get("content-type")||"")) { const ab=await r.arrayBuffer(); buf=await new Promise((res,rej)=>ctx.decodeAudioData(ab,res,rej)); } } catch(e){ buf=null; } }
+  buffers.set(key, buf); return buf;
+}
+function playBuffer(buf){ return new Promise(res => { let done=false; const fin=()=>{ if(!done){ done=true; res(); } };
+  const s=ctx.createBufferSource(); s.buffer=buf; s.connect(ctx.destination); s.onended=fin; currentSrc=s; s.start(); setTimeout(fin, buf.duration*1000+500); }); }
+function tts(text, lang, rate){
+  return new Promise(res => {
+    if (!("speechSynthesis" in window)) { res(false); return; }
+    const u = new SpeechSynthesisUtterance(text); u.lang=lang; u.rate=rate||1;
+    const vs = speechSynthesis.getVoices(); const v = vs.find(v=>v.lang===lang) || vs.find(v=>v.lang.slice(0,2)===lang.slice(0,2)); if (v) u.voice=v;
+    let done=false; const fin=()=>{ if(!done){ done=true; clearTimeout(t); res(true); } };
+    u.onend=fin; u.onerror=fin; const t=setTimeout(fin, FAST ? 30 : 1800+text.length*110);
+    try { speechSynthesis.cancel(); speechSynthesis.speak(u); } catch(e){ fin(); }
+  });
+}
+async function playClip(key, text, lang, rate, altKey){
+  let buf = await loadClip(key); if (!buf && altKey) buf = await loadClip(altKey);
+  if (buf) return playBuffer(buf);
+  return tts(text, lang, rate);
+}
+function stopSound(){ try{ currentSrc && currentSrc.stop(); }catch(e){} try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){} }
+const sayWord = (w, take) => take===2 ? playClip("w_"+w+"_2", w, "en-US", CFG.wordRate, "w_"+w) : playClip("w_"+w, w, "en-US", CFG.wordRate);
+const saySentence = it => playClip(it.id.toLowerCase(), it.sentence, "en-US", CFG.sentenceRate);
+
+/* ---------- 素材清單與預載 ---------- */
+function requiredImages(){ const s=new Set();
+  G.A_practice.concat(G.A).forEach(it=>it.options.forEach(o=>s.add("w_"+o.w)));
+  G.C_practice.concat(G.C).forEach(it=>it.options.forEach(o=>s.add(o.img))); return [...s]; }
+function requiredAudio(){ const s=new Set();
+  G.A_practice.concat(G.A).forEach(it=>s.add("w_"+it.target));
+  G.B_practice.concat(G.B).forEach(it=>{ s.add("w_"+it.w1); s.add("w_"+it.w2); if(it.answer==="same") s.add("w_"+it.w1+"_2"); });
+  G.C_practice.concat(G.C).forEach(it=>s.add(it.id.toLowerCase()));
+  ["inst_a","inst_b","inst_c"].forEach(k=>s.add(k)); return [...s]; }
+const missingImg = new Set();
+const probeImage = f => new Promise(res => { const i=new Image(); i.onload=()=>res(true); i.onerror=()=>res(false); i.src=CFG.imageDir+f+".jpg"; });
+async function pool(list, n, fn, tick){ let i=0, done=0; await Promise.all(Array.from({length:n}, async()=>{ while(i<list.length){ const x=list[i++]; await fn(x); tick(++done); } })); }
+async function preflight(){
+  ensureCtx();
+  const imgs=requiredImages(), auds=requiredAudio(), total=imgs.length+auds.length; let n=0;
+  const bar=el("i"), label=el("p",{class:"muted",id:"loading"},"準備中…");
+  mount(el("h1",{},TITLE), el("div",{class:"panel"}, label, el("div",{class:"bar"},bar)));
+  const tick=()=>{ n++; bar.style.width=Math.round(100*n/total)+"%"; label.textContent=`準備中… ${n} / ${total}`; };
+  missingImg.clear(); let missAud=0;
+  await pool(imgs, 8, async f=>{ if(!(await probeImage(f))) missingImg.add(f); }, tick);
+  await pool(auds, 6, async k=>{ if(!(await loadClip(k))) missAud++; }, tick);
+  S.missing={img:missingImg.size, aud:missAud}; S.assets=(missingImg.size||missAud)?"incomplete":"complete";
+}
+
+/* ---------- 圖片 ---------- */
+function picture(file, label, sub){
+  if (missingImg.has(file)) return el("div",{class:"ph"}, label, sub?el("small",{},sub):null);
+  return el("img",{src:CFG.imageDir+file+".jpg",alt:"",draggable:"false"});
+}
+
+/* ---------- 畫面骨架 ---------- */
+let runId=0, resumeFn=null;
+const doneCount = () => S.responses.length;
+function frame(...content){
+  mount(
+    el("div",{class:"top"}, el("div",{class:"bar"}, el("i",{style:`width:${Math.round(100*doneCount()/TOTAL)}%`})),
+      el("button",{class:"x",title:"暫停",onclick:pauseDialog},"✕")),
+    el("div",{class:"stage"}, ...content));
+}
+function pauseDialog(){
+  stopSound();
+  const roster = S.mode==="roster";
+  mount(el("div",{class:"panel"}, el("h2",{},"要暫停嗎？"),
+    el("p",{class:"muted"}, roster ? `已完成 ${doneCount()} / ${TOTAL} 題。暫停後，${RESUME_HOURS} 小時內用同一台裝置可以從這裡繼續。` : "試用版暫停後不會保留進度。"),
+    el("div",{class:"row"}, el("button",{class:"btn",id:"resume",onclick:()=>{ resumeFn && resumeFn(); }},"繼續作答"),
+      el("button",{class:"btn sec",id:"pause",onclick:()=>{ runId++; if(!roster) store.del("gate-progress"); start(); }}, roster?"暫停，回到開始畫面":"結束試用"))));
+}
+
+/* ---------- 四選一題（A、C 共用） ---------- */
+const ERR = { A:{phon:"音近",sem:"義近",unrel:"無關"}, C:{subject:"主詞",verb:"動作屬性",object:"地點受詞"} };
+function choiceTrial(it, kind, practice){
+  const my=runId;
+  return new Promise(resolve => {
+    const opts=shuffle(it.options); let replays=0, t0=0, locked=true, wrongs=0, answered=false;
+    const playBtn=el("button",{class:"play",title:"再聽一次"},"🔊");
+    const dbg=el("div",{class:"dbg"}, S.debug ? (kind==="A"?it.target:it.sentence) : "");
+    const cards=opts.map(o=>{ const file=kind==="A"?"w_"+o.w:o.img, label=kind==="A"?o.w:o.desc;
+      const c=el("button",{class:"card",disabled:true,"data-key":file,"data-role":S.debug?o.role:null}, picture(file,label,S.debug?o.role:null));
+      c.addEventListener("click",()=>pick(o,c)); return c; });
+    const setLock=v=>{ locked=v; cards.forEach(c=>c.disabled=v); playBtn.disabled=v; };
+    async function play(){ if(my!==runId||answered) return; setLock(true); playBtn.classList.add("on");
+      await (kind==="A"?sayWord(it.target):saySentence(it)); if(my!==runId) return;
+      playBtn.classList.remove("on"); setLock(false); t0=performance.now(); }
+    playBtn.addEventListener("click",()=>{ if(!locked){ replays++; play(); } });
+    async function pick(o,c){
+      if(locked||answered||my!==runId) return; const rt=Math.round(performance.now()-t0); setLock(true);
+      const correct=o.role==="target";
+      if(practice){
+        if(correct){ c.classList.add("right"); await wait(700); resolve(); return; }
+        S.practiceErrors[kind]++; wrongs++; c.classList.add("wrong"); await wait(500); c.classList.remove("wrong");
+        if(wrongs>=2){ cards[opts.findIndex(x=>x.role==="target")].classList.add("right"); await wait(1500); resolve(); }
+        else play();
+        return;
+      }
+      answered=true; c.classList.add("sel");
+      S.responses.push({ item_id:it.id, subtest:kind==="A"?(it.group==="control"?"A_ctrl":"A_stage1"):"C",
+        stimulus:kind==="A"?it.target:it.sentence, response:kind==="A"?o.w:o.desc, correct:correct?1:0,
+        error_type:correct?"":ERR[kind][o.role], rt_ms:rt, replays, tag:kind==="A"?(it.pos||""):"L"+it.level });
+      await wait(450); resolve();
+    }
+    resumeFn=()=>{ frame(playBtn, dbg, el("div",{class:"grid","data-item":it.id}, cards)); if(locked) wait(350).then(play); };
+    resumeFn();
+  });
+}
+
+/* ---------- 一樣／不一樣題（B） ---------- */
+function sameDiffTrial(it, practice, flip){
+  const my=runId;
+  return new Promise(resolve => {
+    const w1=flip?it.w2:it.w1, w2=flip?it.w1:it.w2; let replays=0, t0=0, locked=true, wrongs=0, answered=false;
+    const d1=el("span",{},"🔊"), d2=el("span",{},"🔊");
+    const playBtn=el("button",{class:"btn sec"},"再聽一次");
+    const dbg=el("div",{class:"dbg"}, S.debug?`${w1} – ${w2}`:"");
+    const bSame=el("button",{disabled:true,"data-ans":"same"}, el("b",{},"●●"),"一樣");
+    const bDiff=el("button",{disabled:true,"data-ans":"diff"}, el("b",{},"●▲"),"不一樣");
+    const setLock=v=>{ locked=v; bSame.disabled=v; bDiff.disabled=v; playBtn.disabled=v; };
+    async function play(){ if(my!==runId||answered) return; setLock(true);
+      d1.classList.add("on"); await sayWord(w1,1); d1.classList.remove("on"); if(my!==runId) return; await wait(600);
+      d2.classList.add("on"); await sayWord(w2, it.answer==="same"?2:1); d2.classList.remove("on"); if(my!==runId) return;
+      setLock(false); t0=performance.now(); }
+    playBtn.addEventListener("click",()=>{ if(!locked){ replays++; play(); } });
+    async function pick(ans,b){
+      if(locked||answered||my!==runId) return; const rt=Math.round(performance.now()-t0); setLock(true);
+      const correct=ans===it.answer;
+      if(practice){
+        if(correct){ b.classList.add("right"); await wait(700); resolve(); return; }
+        S.practiceErrors.B++; wrongs++; b.classList.add("wrong"); await wait(500); b.classList.remove("wrong");
+        if(wrongs>=2){ (it.answer==="same"?bSame:bDiff).classList.add("right"); await wait(1500); resolve(); }
+        else play();
+        return;
+      }
+      answered=true; b.classList.add("sel");
+      S.responses.push({ item_id:it.id, subtest:it.answer==="diff"?"B_diff":"B_same", stimulus:`${w1} – ${w2}`,
+        response:ans==="same"?"一樣":"不一樣", correct:correct?1:0, error_type:correct?"":(it.answer==="diff"?"漏報":"誤報"),
+        rt_ms:rt, replays, tag:it.cat||"相同" });
+      await wait(450); resolve();
+    }
+    bSame.addEventListener("click",()=>pick("same",bSame)); bDiff.addEventListener("click",()=>pick("diff",bDiff));
+    resumeFn=()=>{ frame(el("div",{class:"pair","data-item":it.id}, d1, d2), dbg, el("div",{class:"sd"}, bSame, bDiff), playBtn); if(locked) wait(350).then(play); };
+    resumeFn();
+  });
+}
+
+/* ---------- 說明與過場 ---------- */
+const INTRO = {
+  A:{icon:"👂 🖼️", lines:["第一部分：聽聽看，點出你聽到的圖。","先練習兩題。"]},
+  B:{icon:"👂 👂", lines:["第二部分：會聽到兩個聲音。","一樣就按「一樣」，不一樣就按「不一樣」。先練習三題。"]},
+  C:{icon:"👂 🖼️🖼️", lines:["第三部分：聽一句話，點出對的圖。","先練習一題。"]} };
+const STARS = {A:"⭐",B:"⭐⭐",C:"⭐⭐⭐"};
+function gate(part, isGo){
+  const my=runId;
+  return new Promise(resolve => {
+    let left=false;
+    const speak=()=>{ if(my===runId && !left) playClip("inst_"+part.toLowerCase(), ZH[part], "zh-TW", 1); };
+    resumeFn=()=>frame(el("div",{class:"panel",style:"width:100%;max-width:560px;text-align:center"},
+      el("div",{class:"big"}, isGo?STARS[part]:INTRO[part].icon),
+      ...(isGo?["練習完成，開始正式題。"]:INTRO[part].lines).map(l=>el("p",{},l)),
+      el("div",{class:"row",style:"justify-content:center"},
+        isGo?null:el("button",{class:"btn sec",onclick:speak},"🔊 聽說明"),
+        el("button",{class:"btn","data-go":"1",onclick:()=>{ left=true; stopSound(); resolve(); }},"開始"))));
+    resumeFn(); if(!isGo) wait(300).then(speak);
+  });
+}
+
+/* ---------- 流程 ---------- */
+function orderB(items){ for(let k=0;k<200;k++){ const a=shuffle(items); let run=1, ok=true;
+    for(let i=1;i<a.length;i++){ run=a[i].answer===a[i-1].answer?run+1:1; if(run>3){ ok=false; break; } } if(ok) return a; } return shuffle(items); }
+function buildPlan(){
+  const ctrl=shuffle(G.A.filter(i=>i.group==="control")), st=G.A.filter(i=>i.group==="stage1");
+  const A=ctrl.slice(0,2).concat(shuffle(st.concat(ctrl.slice(2))));      // 前兩題用對照詞暖身
+  const B=orderB(G.B), C=[1,2,3].flatMap(l=>shuffle(G.C.filter(i=>i.level===l)));
+  const flip=it=>it.answer==="diff"&&Math.random()<0.5?1:0;
+  return [].concat(
+    [{k:"intro",part:"A"}], G.A_practice.map(i=>({k:"A",id:i.id,p:1})), [{k:"go",part:"A"}], A.map(i=>({k:"A",id:i.id})),
+    [{k:"intro",part:"B"}], G.B_practice.map(i=>({k:"B",id:i.id,p:1,f:flip(i)})), [{k:"go",part:"B"}], B.map(i=>({k:"B",id:i.id,f:flip(i)})),
+    [{k:"intro",part:"C"}], G.C_practice.map(i=>({k:"C",id:i.id,p:1})), [{k:"go",part:"C"}], C.map(i=>({k:"C",id:i.id})));
+}
+function persist(){ if(S.mode!=="roster") return;
+  store.set("gate-progress",{v:G.version, token:S.token, name:S.name, startedAt:S.startedAt, plan:S.plan, idx:S.idx, responses:S.responses, practiceErrors:S.practiceErrors, savedAt:Date.now()}); }
+async function run(){
+  const my=++runId;
+  persist();
+  while(S.idx<S.plan.length){
+    const st=S.plan[S.idx], it=ITEM[st.id];
+    if(st.k==="intro") await gate(st.part,false); else if(st.k==="go") await gate(st.part,true);
+    else if(st.k==="B") await sameDiffTrial(it, !!st.p, !!st.f); else await choiceTrial(it, st.k, !!st.p);
+    if(my!==runId) return;
+    S.idx++; persist();          // 每完成一步就存檔，重新整理或暫停後可以從下一步繼續
+  }
+  finish();
+}
+function begin(){ if(S.mode==="roster"&&API) apiPost({action:"start",token:S.token}).catch(()=>{});
+  S.startedAt=new Date().toISOString(); S.plan=buildPlan(); S.idx=0; S.responses=[]; S.practiceErrors={A:0,B:0,C:0}; run(); }
+
+/* ---------- 計分與判讀 ---------- */
+function PARTDEF(){ const T=G.thresholds; return [
+  {key:"A_stage1",name:"A 詞彙：第一階段詞",total:24,need:T.A1}, {key:"A_ctrl",name:"A 詞彙：對照詞",total:8,need:T.CTRL},
+  {key:"B_diff",name:"B 音韻區辨：「不同」題",total:16,need:T.B_DIFF}, {key:"B_same",name:"B 音韻區辨：「相同」題",total:8,need:T.B_SAME},
+  {key:"C",name:"C 句子理解",total:18,need:T.C} ]; }
+/* 「接近」：未達門檻，但差距在 2 題以內（8 題的題型為 1 題以內），視為測驗誤差範圍 */
+function mkParts(counts, answered){ return PARTDEF().map(p=>{ const c=counts[p.key]||0, full=!answered||answered[p.key]===p.total, pass=full&&c>=p.need;
+  return {...p, correct:c, pass, near:!pass&&full&&c>=p.need-(p.total>=16?2:1)}; }); }
+/* 由試算表存的結果重畫結果頁 */
+function storedScore(r){ const parts=mkParts(r.counts,null), P=Object.fromEntries(parts.map(p=>[p.key,p]));
+  let code=r.code; if(!PARENT[code]) code=!P.A_ctrl.pass?"ctrl":!P.A_stage1.pass?"vocab":!(P.B_diff.pass&&P.B_same.pass)?(P.B_diff.pass?"bias":"disc"):!P.C.pass?"sent":"ready";
+  return {parts, code, borderline:r.borderline===true, profile:r.profile||""}; }
+function score(){
+  const by=k=>S.responses.filter(r=>r.subtest===k), sum=a=>a.reduce((n,r)=>n+r.correct,0), T=G.thresholds;
+  const counts={}, answered={}; PARTDEF().forEach(p=>{ const rs=by(p.key); counts[p.key]=sum(rs); answered[p.key]=rs.length; });
+  const parts=mkParts(counts, answered);
+  const P=Object.fromEntries(parts.map(p=>[p.key,p]));
+  const aErr=by("A_stage1").filter(r=>!r.correct), phon=aErr.filter(r=>r.error_type==="音近").length;
+  const A=P.A_stage1.pass, B=P.B_diff.pass&&P.B_same.pass, C=P.C.pass;
+  let profile, reading, action, code, deciding;
+  if(!P.A_ctrl.pass){ code="ctrl"; deciding=["A_ctrl"]; profile="對照詞未達標"; reading="一般口語詞彙不足，或孩子不理解作答方式；結果不採計。"; action="繼續累積輸入，之後重測。"; }
+  else if(!A&&phon*2>=aErr.length){ code="phon"; deciding=["A_stage1"]; profile="第一階段詞未達標，錯誤多為音近干擾"; reading="認得長詞但分不清短詞，詞彙表徵仍是整體輪廓。"; action="先做最小對比詞的聽辨與口語活動，再進 Phonics。"; }
+  else if(!A){ code="vocab"; deciding=["A_stage1"]; profile="第一階段詞未達標，錯誤多為義近或無關"; reading="不認識這批詞。"; action="各單元先用聽和圖預教目標詞，再進解碼。"; }
+  else if(!B){ code=P.B_diff.pass?"bias":"disc"; deciding=["B_diff","B_same"].filter(k=>!P[k].pass); profile="A 達標；B 未達標"; reading="認得詞，但聽不出特定音的差別。"; action="依未通過的對比類別做聽辨訓練；Phonics 可同步開始。"; }
+  else if(!C){ code="sent"; deciding=["C"]; profile="A、B 達標；C 未達標"; reading="單詞層級足夠，句子理解不足。"; action="可進 Phonics，同時維持大量聽力輸入。"; }
+  else { code="ready"; deciding=[]; profile="全部達標"; reading="達到入門門檻。"; action="直接進 Phonics。"; }
+  const group=(rows,f)=>{ const m={}; rows.forEach(r=>{ const k=f(r); (m[k]=m[k]||{n:0,c:0}); m[k].n++; m[k].c+=r.correct; }); return m; };
+  const count=(rows,f)=>{ const m={}; rows.forEach(r=>{ const k=f(r); m[k]=(m[k]||0)+1; }); return m; };
+  const borderline = deciding.length>0 && deciding.every(k=>P[k].near);
+  return { parts, profile, reading, action, code, borderline, aErrTypes:count(aErr,r=>r.error_type), aByPos:group(by("A_stage1"),r=>r.tag),
+    bByCat:group(by("B_diff"),r=>r.tag), cByLevel:group(by("C"),r=>r.tag), cErrTypes:count(by("C").filter(r=>!r.correct),r=>r.error_type) };
+}
+function csv(){
+  const head=["token","attempt_at","item_id","subtest","stimulus","response","correct","error_type","rt_ms","replays","tag"];
+  const esc=v=>{ v=String(v??""); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+  return "﻿"+[head.join(",")].concat(S.responses.map(r=>[S.token,S.startedAt,r.item_id,r.subtest,r.stimulus,r.response,r.correct,r.error_type,r.rt_ms,r.replays,r.tag].map(esc).join(","))).join("\n");
+}
+
+/* ---------- 成績送出：送不出去的會留在這台裝置，之後自動重送 ---------- */
+async function flush(){
+  let q=store.get("gate-pending")||[]; if(!q.length||!API) return {left:q.length, error:""};
+  const keep=[]; let error="";
+  let refused="";
+  for(const p of q){ try{ const j=await apiPost(p);
+      if(j.ok) continue;
+      if(j.error==="already_taken"||j.error==="token_not_found"){ refused=j.error; continue; }     // 不會再成功，不保留
+      keep.push(p); error=j.error||"unknown"; }catch(e){ keep.push(p); error="network"; } }
+  if(keep.length) store.set("gate-pending",keep); else store.del("gate-pending");
+  return {left:keep.length, error, refused};
+}
+const SENDERR = { network:"目前連不上伺服器", unknown:"伺服器回報錯誤" };
+function finish(){
+  const sc=score();
+  if(S.mode==="roster"){
+    const q=store.get("gate-pending")||[];
+    q.push({ action:"save", attempt_id:S.token+"|"+S.startedAt, token:S.token, attempt_at:S.startedAt, finished_at:new Date().toISOString(),
+      duration_s:Math.round((Date.now()-new Date(S.startedAt))/1000), profile:sc.profile, result_code:sc.code, borderline:sc.borderline, practice_errors:S.practiceErrors, assets:S.assets,
+      version:G.version, ua:navigator.userAgent.slice(0,160), responses:S.responses });
+    store.set("gate-pending",q); store.del("gate-progress");
+  }
+  showResult(sc);
+}
+/* ---------- 給家長看的結果 ---------- */
+const PARENT = {
+  ready:{ h:"可以開始 Phonics 第一階段", t:"「聽得懂」的基礎和解碼的地基都準備好了。現在開始 Phonics 第一階段，孩子唸出來的聲音，能接上他本來就聽得懂的詞。" },
+  sent:{ h:"可以開始 Phonics 第一階段，同時持續累積聽力", t:"第一階段的詞孩子聽得懂，相近的音也分得出來；但這些詞串成句子時，理解還不夠穩。可以開始 Phonics 第一階段，同時要繼續大量聽英文：學會解碼之後，能不能讀懂句子，靠的是聽不聽得懂句子。" },
+  disc:{ h:"可以開始 Phonics 第一階段，並搭配聽辨練習", t:"第一階段的詞孩子聽得懂，但部分相近的音（例如 pin 和 pan）還分不穩。這屬於解碼的地基：Phonics 要把字母對到音，音分不出來，字母就對不上。可以開始第一階段，並搭配聽辨練習。" },
+  bias:{ h:"第二部分需要老師確認", t:"第一階段的詞孩子聽得懂。第二部分裡，同一個詞念兩次的題目，孩子常回答「不一樣」，所以這次無法確定他能不能分辨相近的音。這比較可能是作答方式的問題，不一定是聽辨能力的問題，建議預約諮詢，由老師確認。" },
+  phon:{ h:"建議先把第一階段的詞聽熟", t:"孩子認得比較長的詞；但第一階段那些短而相似的詞（例如 cat 和 cut），常選成發音相近的另一個詞。這表示他對這些詞的聲音印象還不夠精細。Phonics 第一階段教的正是這批短詞，建議先把它們聽熟、聽準，再開始。" },
+  vocab:{ h:"建議先認識第一階段的詞", t:"Phonics 第一階段要唸的詞，孩子還有不少聽不懂。現在學解碼，他唸得出聲音，但聲音對不上意思。建議先用聽和圖把這批詞學起來，再開始。" },
+  ctrl:{ h:"建議多聽一段時間後再測", t:"這次的結果還不能下判斷。連比較容易辨認的長詞，答對的題數也不夠，可能是英文聽得還不夠多，也可能是孩子不熟悉這種作答方式。建議多聽一段時間後再測一次。" } };
+const BORDER = "這次的分數很接近建議的起點，差距在測驗的誤差範圍內。建議預約諮詢，由老師確認。";
+const TYPES = [
+  { title:"「聽得懂」的基礎", sub:"語言理解：聽到詞和句子，知不知道意思", rows:[
+    { key:"A_stage1", name:"聽詞選圖：Phonics 第一階段的詞", note:"短而彼此相似的詞，例如 cat、cut、cup" },
+    { key:"A_ctrl", name:"聽詞選圖：對照用的長詞", note:"比較容易辨認，用來確認孩子理解作答方式", check:true },
+    { key:"C", name:"聽句子選圖", note:"用第一階段的詞組成的句子" } ] },
+  { title:"解碼的地基", sub:"分辨語音，也就是音素覺察（PA）的起點：相近的音，耳朵分不分得出來", rows:[
+    { key:"B_diff", name:"聽兩個詞：發音只差一個音的詞", note:"例如 pin 和 pan，正確答案是「不一樣」" },
+    { key:"B_same", name:"聽兩個詞：同一個詞念兩次", note:"正確答案是「一樣」，用來確認孩子不是一律回答「不一樣」", check:true } ] } ];
+function chip(p, check){
+  const [cls, text] = p.pass ? ["ok", check?"沒問題":"準備好了"] : p.near ? ["mid","接近"] : check ? ["chk","需要確認"] : ["no","還需要累積"];
+  return el("span",{class:"tag "+cls}, text);
+}
+function statRow(p, r){
+  return el("div",{class:"st","data-part":p.key,"data-level":p.pass?"pass":p.near?"near":"below"},
+    el("div",{class:"nm"}, r.name, el("small",{}, r.note)),
+    el("div",{class:"ct"}, `${p.correct} / ${p.total}　`, chip(p, r.check)),
+    el("div",{class:"meter"}, el("i",{style:`width:${Math.round(100*p.correct/p.total)}%`}), el("u",{style:`left:calc(${100*p.need/p.total}% - 1.5px)`})));
+}
+function kv(title,m,fmt){ const ks=Object.keys(m); if(!ks.length) return null; return el("p",{}, el("b",{},title+"："), ks.map(k=>`${k} ${fmt(m[k])}`).join("　")); }
+function downloadCsv(){ const a=el("a",{href:URL.createObjectURL(new Blob([csv()],{type:"text/csv"})),download:`gate_${S.token||"trial"}_${S.startedAt.slice(0,16).replace(/[:T-]/g,"")}.csv`}); document.body.append(a); a.click(); a.remove(); }
+function showResult(sc, stored){
+  window.__GATE_RESULT__={score:sc, responses:S.responses};
+  const roster=S.mode==="roster", P=Object.fromEntries(sc.parts.map(p=>[p.key,p])), msg=PARENT[sc.code];
+  const when=stored?stored.attempt_at:S.startedAt, incomplete=stored?stored.assets==="incomplete":S.assets==="incomplete";
+  const status=el("p",{id:"sendStatus"}, roster?"成績送出中…":"試用版：成績沒有儲存。");
+  const retry=el("button",{class:"btn sec",id:"retry",style:"display:none"},"再送一次");
+  const dl=el("button",{class:"btn sec",id:"download",style:S.debug?"":"display:none",onclick:downloadCsv},"下載作答紀錄");
+  async function trySend(){ retry.style.display="none"; status.className="muted"; status.textContent="成績送出中…"; delete status.dataset.ok;
+    const r=await flush();
+    if(r.refused){ status.className="err"; status.textContent="這個連結已經完成過測驗，這一次的成績沒有儲存。"; status.dataset.ok="0"; }
+    else if(!r.left){ status.textContent="成績已儲存。之後用信裡的同一個連結，可以再看這份結果。"; status.dataset.ok="1"; }
+    else { status.className="err"; status.textContent=`成績還沒送出（${SENDERR[r.error]||r.error}）。成績已保留在這台裝置，請按「再送一次」。`; status.dataset.ok="0"; retry.style.display=""; dl.style.display=""; } }
+  retry.addEventListener("click",trySend);
+  const d=new Date(when), dateText=isNaN(d)?"":d.toLocaleString("zh-TW");
+  mount(
+    stored?null:el("div",{class:"big"},"🎉"), el("h1",{style:"text-align:center"}, stored?`${S.name} 的測驗結果`:"完成了，你好棒！"),
+    el("p",{class:"muted",style:"text-align:center"}, `${roster?(stored?"":S.name+"　"):"試用版　"}${dateText}`),
+    incomplete ? el("p",{class:"note",id:"incomplete"}, stored?"這次測驗進行時素材不齊全，部分題目使用了文字或瀏覽器語音，成績不能採計。":`這次測驗的素材不齊全（缺圖 ${S.missing.img} 張、缺錄音 ${S.missing.aud} 個），部分題目使用了文字或瀏覽器語音，成績不能採計。`) : null,
+    el("div",{class:"panel"}, el("div",{class:"verdict"}, el("b",{id:"profile","data-profile":sc.profile,"data-code":sc.code}, msg.h), el("p",{id:"parentText",style:"margin:.4em 0 0"}, msg.t),
+      sc.borderline ? el("p",{id:"borderline",style:"margin:.6em 0 0"}, BORDER) : null)),
+    CFG.BOOKING_URL ? el("div",{class:"panel cta",id:"booking"}, el("p",{style:"margin-top:0"},"想了解這份結果代表什麼、下一步怎麼安排，可以預約一次諮詢。"),
+      el("a",{class:"btn",href:CFG.BOOKING_URL,target:"_blank",rel:"noopener"},"預約諮詢")) : null,
+    el("div",{class:"panel",id:"stats"}, el("h2",{style:"margin-top:0"},"各部分的結果"),
+      ...TYPES.flatMap(g=>[el("div",{class:"grp"}, g.title, el("small",{}, g.sub)), ...g.rows.map(r=>statRow(P[r.key], r))]),
+      el("p",{class:"muted",style:"margin-bottom:0"},"長條上的黑色記號是目前建議的起點。差距在 2 題以內（8 題的部分為 1 題以內）標為「接近」。")),
+    el("div",{class:"panel explain",id:"explain"}, el("h2",{style:"margin-top:0"},"這個測驗在看什麼"),
+      el("p",{},"讀懂一段英文，需要兩種能力相乘：「把字唸出來」（解碼）乘上「聽得懂」（語言理解）。任何一邊是零，結果就是零。"),
+      el("p",{},"Phonics 教的是解碼：看到字母，能唸出聲音。但唸出來的聲音，要能對上孩子本來就聽得懂的詞，才會變成意思。所以開始學 Phonics 之前，這個測驗先檢查兩件事："),
+      el("ul",{}, el("li",{}, el("b",{},"「聽得懂」的基礎。"),"Phonics 第一階段會唸到的詞，孩子聽不聽得懂；這些詞串成句子之後，還聽不聽得懂。"),
+        el("li",{}, el("b",{},"解碼的地基。"),"相近的音，耳朵分不分得出來。這是專家常說的「音素覺察」（Phonemic Awareness，簡稱 PA）的起點：先聽得出兩個音不一樣，才有辦法進一步把一個詞拆成一個一個的音。Phonics 要把字母對到音，音分得清楚，字母才對得上。")),
+      el("p",{},"這個測驗只涵蓋 Phonics 第一階段的詞，所以結果說的是「適不適合開始第一階段」，不是孩子整體的英文程度。它也沒有測孩子會不會把字唸出來，那要等學了 Phonics 之後才測得到。")),
+    S.debug&&!stored ? el("div",{class:"panel",id:"detail"}, el("h2",{style:"margin-top:0"},"細項（只在試用版的檢查模式顯示）"),
+      el("p",{}, el("b",{},"判讀："), `${sc.profile}　${sc.reading}　建議：${sc.action}`),
+      kv("A 錯誤類型",sc.aErrTypes,v=>v+" 題"), kv("A 各對比位置答對",sc.aByPos,v=>`${v.c}/${v.n}`),
+      kv("B 各對比類別答對",sc.bByCat,v=>`${v.c}/${v.n}`), kv("C 各層級答對",sc.cByLevel,v=>`${v.c}/${v.n}`), kv("C 錯誤成分",sc.cErrTypes,v=>v+" 題"),
+      el("p",{id:"practice"}, el("b",{},"練習題答錯次數："), `A ${S.practiceErrors.A}　B ${S.practiceErrors.B}　C ${S.practiceErrors.C}`)) : null,
+    stored ? null : el("div",{class:"panel"}, status, el("div",{class:"row"}, retry, dl, roster?null:el("button",{class:"btn",id:"home",onclick:start},"回到開始畫面"))),
+    el("p",{class:"muted"},"這是線上測驗的初步結果。建議的起點目前是暫定值，會依累積的資料調整。", contactLine()));
+  if(roster&&!stored) trySend();
+}
+
+/* ---------- 進入測驗 ---------- */
+const contactLine = () => CFG.CONTACT_EMAIL ? el("span",{}, "　有問題請來信 ", el("a",{href:"mailto:"+CFG.CONTACT_EMAIL}, CFG.CONTACT_EMAIL), "。") : null;
+function blocked(){
+  mount(el("h1",{},TITLE), el("div",{class:"panel"},
+    el("p",{class:"note",id:"blocked"},"測驗還在準備中，暫時無法開始。請過幾天再點同一個連結。"),
+    el("p",{class:"muted"},`（缺圖 ${S.missing.img} 張、缺錄音 ${S.missing.aud} 個）`, contactLine()),
+    el("div",{class:"row"}, DEMO_OK?el("button",{class:"btn sec",id:"toDemo",onclick:()=>enter("demo")},"使用試用版"):null, el("button",{class:"btn",onclick:start},"重新整理"))));
+}
+async function enter(mode, resume){
+  S.mode=mode; S.debug = mode==="demo" && qs.get("debug")==="1";
+  if(mode==="demo"){ S.token=""; S.name=""; }
+  await preflight();
+  if(mode==="roster" && S.assets==="incomplete" && !CFG.ALLOW_INCOMPLETE_ASSETS){ blocked(); return; }
+  if(resume){ S.startedAt=resume.startedAt; S.plan=resume.plan; S.idx=resume.idx; S.responses=resume.responses; S.practiceErrors=resume.practiceErrors; run(); }
+  else begin();
+}
+const goToken = t => { location.search = "?t="+encodeURIComponent(t.trim().toUpperCase()) + (qs.get("fast")?"&fast=1":""); };
+const ADULT = ["請讓孩子自己聽、自己點，不要提示。提示會讓結果失準。","請在安靜的地方作答，並把音量調到孩子聽得清楚的大小。","每題可以按 🔊 再聽一次。練習題答錯會再聽一次，正式題不會顯示對錯。",
+  `每位孩子只能測一次。中途離開的話，${RESUME_HOURS} 小時內用同一台裝置點同一個連結可以接續。`];
+
+/* ---------- 專屬連結：?t=代碼 ---------- */
+async function openToken(t){
+  runId++; stopSound(); S.mode=null;
+  mount(el("h1",{},TITLE), el("div",{class:"panel"}, el("p",{class:"muted",id:"loading"},"讀取中…")));
+  const fail = (text, retry) => mount(el("h1",{},TITLE), el("div",{class:"panel"}, el("p",{class:"note",id:"linkError"}, text),
+    el("div",{class:"row"}, retry?el("button",{class:"btn",onclick:()=>openToken(t)},"再試一次"):null, el("a",{class:"btn sec",href:location.pathname},"回到報名頁")), el("p",{class:"muted"}, contactLine())));
+  if(!API){ fail("網站還沒有完成設定，暫時無法使用。"); return; }
+  let j;
+  try{
+    if((store.get("gate-pending")||[]).some(p=>p.token===t)) await flush();          // 上次沒送出的成績，先補送
+    j=await apiGet({action:"lookup",token:t});
+  }catch(e){ fail("目前連不上伺服器，請檢查網路後再試一次。", true); return; }
+  if(!j.ok){ fail("這個連結無效。請確認是從報名後收到的信裡點進來的。"); return; }
+  S.token=t; S.name=j.name||""; store.set("gate-token",{t, name:S.name});
+  if((store.get("gate-pending")||[]).some(p=>p.token===t)){
+    mount(el("h1",{},TITLE), el("div",{class:"panel"}, el("p",{class:"note",id:"unsent"},`${S.name} 已經完成測驗，但成績還沒送出。請確認網路正常後再送一次。`),
+      el("button",{class:"btn",id:"resend",onclick:()=>openToken(t)},"再送一次")));
+    return;
+  }
+  if(j.result && !j.can_take){ S.mode="roster"; showResult(storedScore(j.result), j.result); return; }
+  let saved=store.get("gate-progress");
+  if(saved && (saved.token!==t || saved.v!==G.version || Date.now()-saved.savedAt>RESUME_HOURS*3600e3)){ store.del("gate-progress"); saved=null; }
+  mount(
+    el("h1",{},TITLE),
+    saved ? el("div",{class:"panel",id:"resumeBox"}, el("p",{}, el("b",{id:"who"},S.name), `　有一份還沒做完的測驗（已完成 ${saved.responses.length} / ${TOTAL} 題）。`),
+        el("button",{class:"btn",id:"continue",onclick:()=>enter("roster",saved)},"從上次的地方繼續"))
+      : el("div",{class:"panel",id:"ready"}, el("p",{}, el("b",{id:"who"},S.name), " 的測驗　約 12 分鐘", j.result?el("span",{class:"muted"},"　（已開放重測）"):null),
+        el("button",{class:"btn",id:"start",onclick:()=>enter("roster")},"開始測驗")),
+    el("div",{class:"panel"}, el("h2",{style:"margin-top:0"},"給陪同的大人"), el("ul",{style:"line-height:1.7;padding-left:1.2em;margin:0"}, ADULT.map(x=>el("li",{},x)))),
+    el("p",{class:"muted"}, contactLine()));
+}
+
+/* ---------- 首頁：報名 ---------- */
+const REGERR = { invalid_email:"Email 格式不正確，請再確認一次。", missing_field:"還有必填的欄位沒有填。", too_many:"這個信箱剛剛已經寄過幾次了，請先到信箱（含垃圾信件匣）找找看，一小時後可以再試。",
+  mail_quota:"今天的報名人數已滿，您的資料已經收到，連結會盡快補寄到您的信箱。", mail_failed:"信暫時寄不出去，請稍後再試。", not_configured:"網站還沒有完成設定，暫時無法報名。" };
+function sentScreen(data){
+  const msg=el("p",{id:"sentMsg",class:"muted"});
+  const again=el("button",{class:"btn sec",id:"resendMail"},"重新寄一次");
+  again.addEventListener("click",async()=>{ again.disabled=true; msg.className="muted"; msg.textContent="寄送中…";
+    try{ const j=await apiPost(data); msg.className=j.ok?"muted":"err"; msg.textContent=j.ok?"已經重新寄出。":(REGERR[j.error]||"寄送失敗，請稍後再試。"); }
+    catch(e){ msg.className="err"; msg.textContent="目前連不上伺服器，請稍後再試。"; }
+    again.disabled=false; });
+  mount(el("h1",{},TITLE), el("div",{class:"panel",id:"sent"}, el("div",{class:"big"},"📮"), el("h2",{style:"text-align:center"},"信已經寄出"),
+    el("p",{}, "請到 ", el("b",{},data.email), " 收信，點信裡的「開始測驗」。"),
+    el("p",{class:"muted"},"幾分鐘內沒收到，請看看垃圾信件匣或促銷內容分頁。"),
+    el("div",{class:"row"}, again, el("button",{class:"btn sec",id:"editReg",onclick:()=>landing(data)},"修改報名資料")), msg), el("p",{class:"muted"}, contactLine()));
+}
+function landing(prefill){
+  runId++; stopSound(); S.mode=null; prefill=prefill||{};
+  const f = (id, attrs) => el("input", Object.assign({id, name:id, value:prefill[id]||""}, attrs));
+  const parent=f("parent_name",{type:"text",maxlength:"20",autocomplete:"name",required:true}), email=f("email",{type:"email",maxlength:"100",autocomplete:"email",inputmode:"email",required:true}),
+    child=f("child_name",{type:"text",maxlength:"20",required:true}), hp=f("website",{type:"text",tabindex:"-1",autocomplete:"off"});
+  const age=el("select",{id:"age",required:true}, el("option",{value:""},"請選擇"), [3,4,5,6,7,8,9,10,11,12].map(n=>el("option",{value:n, selected:String(prefill.age)===String(n)}, n+" 歲")));
+  const exp=el("select",{id:"experience"}, ["","還沒有特別接觸","聽英文不到一年（兒歌、動畫、DWE 等）","聽英文一到兩年","聽英文兩年以上"].map(x=>el("option",{value:x, selected:prefill.experience===x}, x||"請選擇（可不填）")));
+  const consent=el("input",{type:"checkbox",id:"consent"}), marketing=el("input",{type:"checkbox",id:"marketing"});
+  const msg=el("p",{id:"regMsg",class:"err"}), submit=el("button",{class:"btn",id:"register",type:"submit"},"送出報名");
+  const form=el("form",{id:"regForm",novalidate:true},
+    el("label",{for:"parent_name"},"家長的稱呼"), parent,
+    el("label",{for:"email"},"Email（測驗連結會寄到這裡）"), email,
+    el("label",{for:"child_name"},"孩子的名字或暱稱"), child,
+    el("label",{for:"age"},"孩子的年齡"), age,
+    el("label",{for:"experience"},"孩子接觸英文的情況"), exp,
+    el("div",{class:"hp","aria-hidden":"true"}, el("label",{for:"website"},"請不要填這一欄"), hp),
+    el("label",{class:"chk"}, consent, el("span",{},"我同意提供以上資料，用於這次測驗、結果說明與後續聯絡。（必填）")),
+    el("label",{class:"chk"}, marketing, el("span",{},"我願意收到課程與活動資訊。（可不勾）")),
+    el("p",{}, submit), msg);
+  form.addEventListener("submit", async e=>{ e.preventDefault(); msg.textContent="";
+    const data={action:"register", parent_name:parent.value.trim(), email:email.value.trim(), child_name:child.value.trim(), age:parseInt(age.value,10), experience:exp.value,
+      consent:consent.checked, marketing:marketing.checked, website:hp.value};
+    if(!data.parent_name||!data.child_name||!data.age){ msg.textContent="請填寫家長的稱呼、孩子的名字和年齡。"; return; }
+    if(!/^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(data.email)){ msg.textContent=REGERR.invalid_email; return; }
+    if(!data.consent){ msg.textContent="請勾選同意提供資料。"; return; }
+    submit.disabled=true; submit.textContent="送出中…";
+    try{ const j=await apiPost(data); if(j.ok) { sentScreen(data); return; } msg.textContent=REGERR[j.error]||"報名沒有成功，請稍後再試。"; }
+    catch(err){ msg.textContent="目前連不上伺服器，請檢查網路後再試一次。"; }
+    submit.disabled=false; submit.textContent="送出報名"; });
+  const known=store.get("gate-token"), code=el("input",{type:"text",id:"token",placeholder:"信裡的代碼",autocomplete:"off",autocapitalize:"characters",spellcheck:"false"});
+  mount(
+    el("h1",{},TITLE),
+    el("p",{},"開始學 Phonics 之前，先確認孩子的耳朵準備好了沒有。這個線上測驗約 12 分鐘，孩子只需要聽和點，不需要認字。"),
+    el("p",{class:"muted"},"適合已經聽過一段時間英文（例如兒歌、動畫、DWE）、準備開始學 Phonics 的孩子。免費，每位孩子可以測一次。"),
+    known&&known.t ? el("div",{class:"panel",id:"known"}, el("p",{style:"margin-top:0"}, "這台裝置上有 ", el("b",{},known.name||known.t), " 的測驗。"),
+      el("button",{class:"btn",id:"goKnown",onclick:()=>goToken(known.t)},"前往")) : null,
+    el("div",{class:"panel"}, el("h2",{style:"margin-top:0"},"怎麼進行"),
+      el("ol",{class:"steps"}, ["填寫下面的報名資料。","到信箱收信，點信裡的連結。","孩子作答，約 12 分鐘。","做完立刻看到結果。"].map(x=>el("li",{},x)))),
+    el("div",{class:"panel",id:"regPanel"}, el("h2",{style:"margin-top:0"},"報名"),
+      !API ? el("p",{class:"note",id:"notReady"},"網站還沒有完成設定，暫時無法報名。")
+      : REG_OPEN ? form : el("p",{id:"closed"},"測驗即將開放報名。")),
+    el("div",{class:"panel"}, el("details",{id:"haveCode"}, el("summary",{},"已經報名過？輸入信裡的代碼"),
+      el("div",{class:"row",style:"margin-top:10px"}, code, el("button",{class:"btn sec",id:"goCode",onclick:()=>{ if(code.value.trim()) goToken(code.value); }},"前往")))),
+    el("p",{class:"muted"}, CFG.CONTACT_EMAIL?["想查詢或刪除報名資料，請來信 ", el("a",{href:"mailto:"+CFG.CONTACT_EMAIL},CFG.CONTACT_EMAIL), "。"]:null,
+      DEMO_OK?el("button",{class:"link",id:"demo",onclick:()=>enter("demo")},"試用版（不儲存成績）"):null));
+  if("speechSynthesis" in window) speechSynthesis.getVoices();
+}
+function start(){ if(TOKEN_Q) openToken(TOKEN_Q); else landing(); }
+start();
+})();
+</script>
+</body>
+</html>

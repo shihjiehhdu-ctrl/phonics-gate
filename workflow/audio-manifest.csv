@@ -1,0 +1,90 @@
+﻿file,type,text,used_in,notes,status
+w_apple.mp3,單詞,apple,A30,,todo
+w_bad.mp3,單詞,bad,B05,,todo
+w_bag.mp3,單詞,bag,B08,,todo
+w_banana.mp3,單詞,banana,A26,,todo
+w_bat.mp3,單詞,bat,A04 B08,,todo
+w_bed.mp3,單詞,bed,A05 B05 B19 B19,,todo
+w_brush.mp3,單詞,brush,A22,,todo
+w_butterfly.mp3,單詞,butterfly,A28,,todo
+w_car.mp3,單詞,car,PA1,,todo
+w_cat.mp3,單詞,cat,A01 B02 B17 B17,,todo
+w_chin.mp3,單詞,chin,A24,,todo
+w_crack.mp3,單詞,crack,B16,,todo
+w_cup.mp3,單詞,cup,B07,,todo
+w_cut.mp3,單詞,cut,B02 B07,,todo
+w_dog.mp3,單詞,dog,PB3 PB3,,todo
+w_duck.mp3,單詞,duck,PB2,,todo
+w_egg.mp3,單詞,egg,A11,,todo
+w_elephant.mp3,單詞,elephant,A25,,todo
+w_frog.mp3,單詞,frog,A16 PB2,,todo
+w_glass.mp3,單詞,glass,A13 B15,,todo
+w_grass.mp3,單詞,grass,B15 B23 B23,,todo
+w_hand.mp3,單詞,hand,A14,,todo
+w_hat.mp3,單詞,hat,A03 B03,,todo
+w_hot.mp3,單詞,hot,B03,,todo
+w_king.mp3,單詞,king,A10,,todo
+w_leg.mp3,單詞,leg,A07 B04,,todo
+w_lock.mp3,單詞,lock,A21,,todo
+w_log.mp3,單詞,log,B04,,todo
+w_mad.mp3,單詞,mad,B10,,todo
+w_man.mp3,單詞,man,A08 B06,,todo
+w_mat.mp3,單詞,mat,B10,,todo
+w_men.mp3,單詞,men,B06,,todo
+w_milk.mp3,單詞,milk,PB1 PB1,,todo
+w_monkey.mp3,單詞,monkey,A32,,todo
+w_nest.mp3,單詞,nest,A17,,todo
+w_pan.mp3,單詞,pan,B01,,todo
+w_pick.mp3,單詞,pick,B09,,todo
+w_pig.mp3,單詞,pig,A02 B09,,todo
+w_pin.mp3,單詞,pin,A06 B01 B18 B18,,todo
+w_rabbit.mp3,單詞,rabbit,A29,,todo
+w_ring.mp3,單詞,ring,B21 B21,,todo
+w_sell.mp3,單詞,sell,B13,,todo
+w_shell.mp3,單詞,shell,A19 B13 B22 B22,,todo
+w_sink.mp3,單詞,sink,B14,,todo
+w_sit.mp3,單詞,sit,A12,,todo
+w_sock.mp3,單詞,sock,A20 B24 B24,,todo
+w_star.mp3,單詞,star,PA2,,todo
+w_string.mp3,單詞,string,A18,,todo
+w_sun.mp3,單詞,sun,A09 B20 B20,,todo
+w_swim.mp3,單詞,swim,B11,,todo
+w_swing.mp3,單詞,swing,A15 B11,,todo
+w_thin.mp3,單詞,thin,B12,,todo
+w_thing.mp3,單詞,thing,B12,,todo
+w_think.mp3,單詞,think,B14,,todo
+w_track.mp3,單詞,track,A23 B16,,todo
+w_umbrella.mp3,單詞,umbrella,A27,,todo
+w_window.mp3,單詞,window,A31,,todo
+w_bed_2.mp3,單詞第二次錄音,bed,B19,必須是另外錄的一次，不可複製第一次的檔案,todo
+w_cat_2.mp3,單詞第二次錄音,cat,B17,必須是另外錄的一次，不可複製第一次的檔案,todo
+w_dog_2.mp3,單詞第二次錄音,dog,PB3,必須是另外錄的一次，不可複製第一次的檔案,todo
+w_grass_2.mp3,單詞第二次錄音,grass,B23,必須是另外錄的一次，不可複製第一次的檔案,todo
+w_milk_2.mp3,單詞第二次錄音,milk,PB1,必須是另外錄的一次，不可複製第一次的檔案,todo
+w_pin_2.mp3,單詞第二次錄音,pin,B18,必須是另外錄的一次，不可複製第一次的檔案,todo
+w_ring_2.mp3,單詞第二次錄音,ring,B21,必須是另外錄的一次，不可複製第一次的檔案,todo
+w_shell_2.mp3,單詞第二次錄音,shell,B22,必須是另外錄的一次，不可複製第一次的檔案,todo
+w_sock_2.mp3,單詞第二次錄音,sock,B24,必須是另外錄的一次，不可複製第一次的檔案,todo
+w_sun_2.mp3,單詞第二次錄音,sun,B20,必須是另外錄的一次，不可複製第一次的檔案,todo
+c01.mp3,句子,The cat sits on the mat.,C01,,todo
+c02.mp3,句子,The dog runs up the hill.,C02,,todo
+c03.mp3,句子,The pig sits in the sun.,C03,,todo
+c04.mp3,句子,The man cuts the log.,C04,,todo
+c05.mp3,句子,The egg is in the pan.,C05,,todo
+c06.mp3,句子,The king pulls the bag.,C06,,todo
+c07.mp3,句子,The duck is on the log.,C07,,todo
+c08.mp3,句子,The frog swims in the pond.,C08,,todo
+c09.mp3,句子,The king has a ring on his hand.,C09,,todo
+c10.mp3,句子,The sock is in the box.,C10,,todo
+c11.mp3,句子,The cat licks the fish.,C11,,todo
+c12.mp3,句子,The pig runs in the grass.,C12,,todo
+c13.mp3,句子,The man has a red hat.,C13,,todo
+c14.mp3,句子,A big pig digs in the grass.,C14,,todo
+c15.mp3,句子,The black dog drinks the milk.,C15,,todo
+c16.mp3,句子,The sad man sits on the bed.,C16,,todo
+c17.mp3,句子,The wet duck stands on the sled.,C17,,todo
+c18.mp3,句子,The strong man lifts the big drum.,C18,,todo
+pc1.mp3,句子,The dog sits on the bed.,PC1,,todo
+inst_a.mp3,中文說明,聽聽看，點出你聽到的圖片。,第一部分說明,,todo
+inst_b.mp3,中文說明,你會聽到兩個聲音。一樣，就按一樣。不一樣，就按不一樣。,第二部分說明,,todo
+inst_c.mp3,中文說明,聽一句話，點出對的圖片。,第三部分說明,,todo

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>素材檢查｜Phonics 入門門檻測驗</title>
+<style>
+:root{--bg:#f6f3ec;--ink:#22303c;--muted:#6b7780;--card:#fff;--line:#d9d3c5;--accent:#2f6fb0;--ok:#2e8b57;--warn:#c0392b;--soft:#e9eff6;--redo:#e08a00}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",Arial,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:.2em 0}
+h2{font-size:1.05rem;margin:1.4em 0 .5em}
+.muted{color:var(--muted);font-size:.9rem}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 14px}
+button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.pri{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+.stat{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}
+.stat div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;min-width:110px}
+.stat b{display:block;font-size:1.5rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.set{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.group{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0}
+.group h3{margin:0 0 8px;font-size:1rem}
+.tile{background:var(--card);border:2px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
+.tile .pic{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:#fafafa;color:var(--warn);font-weight:600}
+.tile img{width:100%;height:100%;object-fit:contain}
+.tile .cap{padding:6px 8px;font-size:.8rem;line-height:1.35;border-top:1px solid var(--line)}
+.tile .cap code{display:block;font-size:.75rem;color:var(--muted);word-break:break-all}
+.tile .role{display:inline-block;font-size:.7rem;background:var(--soft);color:var(--accent);border-radius:999px;padding:1px 8px;margin-bottom:3px}
+.tile.redo{border-color:var(--redo);box-shadow:0 0 0 3px var(--redo)}
+.tile input{width:100%;border:0;border-top:1px solid var(--line);padding:6px 8px;font:inherit;font-size:.8rem}
+.hide{display:none}
+@media (max-width:640px){.set{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<main>
+<h1>素材檢查</h1>
+<p class="muted">圖片放進 <code>site/assets/images/</code> 後重新整理本頁就會出現。點一下圖片可標記「重做」並寫下原因，最後匯出重做清單交給 GPT Work。這一頁是本機工具，不會發佈到網站上。</p>
+<div class="stat" id="stat"></div>
+<div class="bar" id="tabs"></div>
+<div class="bar" id="filters"></div>
+<div class="bar"><button class="pri" id="dl">下載重做清單（redo-list.csv）</button><button id="copy">複製重做指令</button><button id="clear">清除所有標記</button><span class="muted" id="msg"></span></div>
+<div id="view"></div>
+</main>
+<script src="../site/data/items.js"></script>
+<script src="manifest.js"></script>
+<script>
+(function(){
+"use strict";
+const CFG={imageDir:"../site/assets/images/"}, G=window.GATE, M=window.GATE_MANIFEST;
+const byFile=Object.fromEntries(M.map(m=>[m.file,m]));
+const state={}; M.forEach(m=>state[m.file]={present:null});
+let marks={}; try{ marks=JSON.parse(localStorage.getItem("gate-redo")||"{}"); }catch(e){}
+const save=()=>{ try{ localStorage.setItem("gate-redo",JSON.stringify(marks)); }catch(e){} };
+let tab="all", filter="全部";
+const $=id=>document.getElementById(id);
+const el=(t,a={},...k)=>{const e=document.createElement(t);for(const[x,v]of Object.entries(a)){if(x==="class")e.className=v;else if(x.startsWith("on"))e.addEventListener(x.slice(2),v);else if(v!=null&&v!==false)e.setAttribute(x,v);}for(const c of k.flat())if(c!=null)e.append(c.nodeType?c:document.createTextNode(c));return e;};
+const ROLE={target:"正解",phon:"音近",sem:"義近",unrel:"無關",subject:"換主詞",verb:"換動作／屬性／關係",object:"換地點／受詞"};
+
+function tile(file, role){
+  const m=byFile[file]||{description:""};
+  const pic=el("div",{class:"pic"},"缺圖");
+  const note=el("input",{placeholder:"重做原因",value:marks[file]||"",class:marks[file]!=null?"":"hide"});
+  const t=el("div",{class:"tile"+(marks[file]!=null?" redo":""),"data-file":file}, pic,
+    el("div",{class:"cap"}, role?el("span",{class:"role"},ROLE[role]||role):null, el("div",{},m.description), el("code",{},file)), note);
+  const img=new Image(); img.alt="";
+  img.onload=()=>{ pic.replaceChildren(img); pic.style.color=""; state[file].present=true; stats(); applyFilter(t,file); };
+  img.onerror=()=>{ state[file].present=false; stats(); applyFilter(t,file); };
+  img.src=CFG.imageDir+file+"?v="+Date.now();
+  pic.addEventListener("click",()=>{ if(marks[file]!=null){ delete marks[file]; t.classList.remove("redo"); note.classList.add("hide"); } else { marks[file]=""; t.classList.add("redo"); note.classList.remove("hide"); note.focus(); } save(); stats(); applyFilter(t,file); });
+  note.addEventListener("input",()=>{ marks[file]=note.value; save(); });
+  note.addEventListener("click",e=>e.stopPropagation());
+  return t;
+}
+function applyFilter(t,file){
+  const p=state[file].present, r=marks[file]!=null;
+  const show = filter==="全部" || (filter==="缺圖"&&p===false) || (filter==="已有"&&p===true) || (filter==="標記重做"&&r);
+  if (tab==="all") t.classList.toggle("hide",!show);
+}
+function stats(){
+  const vals=Object.values(state), have=vals.filter(s=>s.present===true).length, miss=vals.filter(s=>s.present===false).length;
+  $("stat").replaceChildren(...[["全部",M.length],["已有",have],["缺圖",miss],["標記重做",Object.keys(marks).length]].map(([k,v])=>el("div",{"data-stat":k},el("b",{},String(v)),k)));
+}
+function render(){
+  const v=$("view"); v.replaceChildren();
+  if (tab==="all"){
+    for (const [b,name] of [["0","第 0 批：風格定錨（先做，核可後才做其他）"],["1","第 1 批：單詞圖"],["2","第 2 批：情境圖"]]){
+      const ms=M.filter(m=>m.batch===b); v.append(el("h2",{},`${name}　${ms.length} 張`), el("div",{class:"grid"}, ms.map(m=>tile(m.file))));
+    }
+  } else if (tab==="A"){
+    for (const it of G.A_practice.concat(G.A)) v.append(el("div",{class:"group"}, el("h3",{},`${it.id}　播放：${it.target}${it.contrast?"　對比 "+it.contrast:""}`),
+      el("div",{class:"set"}, it.options.map(o=>tile("w_"+o.w+".jpg",o.role)))));
+  } else {
+    for (const it of G.C_practice.concat(G.C)) v.append(el("div",{class:"group"}, el("h3",{},`${it.id}　${it.sentence}`),
+      el("div",{class:"set"}, it.options.map(o=>tile(o.img+".jpg",o.role)))));
+  }
+}
+function bars(){
+  $("tabs").replaceChildren(...[["all","全部圖片"],["A","A 題組檢視（四張並排）"],["C","C 題組檢視（四張並排）"]].map(([k,n])=>el("button",{class:tab===k?"on":"",onclick:()=>{tab=k;bars();render();}},n)));
+  $("filters").replaceChildren(...(tab==="all"?["全部","缺圖","已有","標記重做"]:[]).map(n=>el("button",{class:filter===n?"on":"",onclick:()=>{filter=n;bars();render();}},n)));
+}
+function redoRows(){ return Object.keys(marks).sort().map(f=>({file:f, description:(byFile[f]||{}).description||"", variation:(byFile[f]||{}).variation||"", reason:marks[f]||""})); }
+$("dl").addEventListener("click",()=>{
+  const rows=redoRows(); if(!rows.length){ $("msg").textContent="目前沒有標記任何圖片。"; return; }
+  const esc=v=>/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
+  const text="﻿file,description,variation,reason\n"+rows.map(r=>[r.file,r.description,r.variation,r.reason].map(esc).join(",")).join("\n");
+  const a=el("a",{href:URL.createObjectURL(new Blob([text],{type:"text/csv"})),download:"redo-list.csv"}); document.body.append(a); a.click(); a.remove();
+  $("msg").textContent=`已下載 ${rows.length} 張的重做清單，請放到 workflow/ 資料夾。`;
+});
+$("copy").addEventListener("click",async()=>{
+  const rows=redoRows(); if(!rows.length){ $("msg").textContent="目前沒有標記任何圖片。"; return; }
+  const text="請依 workflow/IMAGE_BRIEF.md 的規範重做以下圖片，只動這些檔案：\n"+rows.map(r=>`- ${r.file}：${r.description}${r.reason?"（重做原因："+r.reason+"）":""}`).join("\n");
+  try{ await navigator.clipboard.writeText(text); $("msg").textContent="已複製。"; }catch(e){ $("msg").textContent="無法複製，請改用下載。"; }
+});
+$("clear").addEventListener("click",()=>{ marks={}; save(); stats(); render(); });
+bars(); stats(); render();
+})();
+</script>
+</body>
+</html>
