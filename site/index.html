@@ -95,7 +95,16 @@ details summary{cursor:pointer;color:var(--accent)}
 (function(){
 "use strict";
 const CFG = Object.assign({SHEET_API:"", ALLOW_INCOMPLETE_ASSETS:false, REGISTRATION_OPEN:false, BOOKING_URL:"", CONTACT_EMAIL:"", imageDir:"assets/images/", audioDir:"assets/audio/", wordRate:0.85, sentenceRate:0.85}, window.GATE_CONFIG||{});
-const API = /^https?:\/\//.test(CFG.SHEET_API) ? CFG.SHEET_API : "";
+const SHEET = String(CFG.SHEET_API==null?"":CFG.SHEET_API).trim();
+const API = /^https?:\/\//.test(SHEET) ? SHEET : "";
+/* 設定有問題時，說明是哪一種問題（給管理者看） */
+function configProblem(){
+  if(!window.GATE_CONFIG) return "config.js 沒有載入成功。可能是檔案沒有上傳到 site 資料夾，或檔案裡有語法錯誤（例如引號被改成全形或彎引號、少了逗號）。";
+  if(!SHEET || /PASTE_YOUR/.test(SHEET)) return "config.js 的 SHEET_API 還是預設的佔位文字。網站上的 config.js 可能不是你改過的那一份。";
+  if(!API) return "config.js 的 SHEET_API 不是 https:// 開頭的網址。";
+  return "";
+}
+const adminHint = () => el("p",{class:"muted",id:"adminHint"}, "給管理者：", configProblem(), " 在網址後面加上 ?check=1 可以看到完整的設定檢查。");
 const G = window.GATE, app = document.getElementById("app");
 const qs = new URLSearchParams(location.search);
 const LOCAL = location.protocol==="file:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
@@ -492,7 +501,7 @@ async function openToken(t){
   mount(el("h1",{},TITLE), el("div",{class:"panel"}, el("p",{class:"muted",id:"loading"},"讀取中…")));
   const fail = (text, retry) => mount(el("h1",{},TITLE), el("div",{class:"panel"}, el("p",{class:"note",id:"linkError"}, text),
     el("div",{class:"row"}, retry?el("button",{class:"btn",onclick:()=>openToken(t)},"再試一次"):null, el("a",{class:"btn sec",href:location.pathname},"回到報名頁")), el("p",{class:"muted"}, contactLine())));
-  if(!API){ fail("網站還沒有完成設定，暫時無法使用。"); return; }
+  if(!API){ fail("網站還沒有完成設定，暫時無法使用。"); app.append(adminHint()); return; }
   let j;
   try{
     if((store.get("gate-pending")||[]).some(p=>p.token===t)) await flush();          // 上次沒送出的成績，先補送
@@ -520,7 +529,7 @@ async function openToken(t){
 
 /* ---------- 首頁：報名 ---------- */
 const REGERR = { invalid_email:"Email 格式不正確，請再確認一次。", missing_field:"還有必填的欄位沒有填。", too_many:"這個信箱剛剛已經寄過幾次了，請先到信箱（含垃圾信件匣）找找看，一小時後可以再試。",
-  mail_quota:"今天的報名人數已滿，您的資料已經收到，連結會盡快補寄到您的信箱。", mail_failed:"信暫時寄不出去，請稍後再試。", not_configured:"網站還沒有完成設定，暫時無法報名。" };
+  mail_quota:"今天的報名人數已滿，您的資料已經收到，連結會盡快補寄到您的信箱。", mail_failed:"信暫時寄不出去，請稍後再試。", not_configured:"報名系統還沒有完成設定，暫時無法報名。（給管理者：這個訊息來自後端。Code.gs 的 SITE_URL 還沒有填好，或修改後沒有以「新版本」重新部署。在網址後面加上 ?check=1 可以檢查。）" };
 function sentScreen(data){
   const msg=el("p",{id:"sentMsg",class:"muted"});
   const again=el("button",{class:"btn sec",id:"resendMail"},"重新寄一次");
@@ -572,7 +581,7 @@ function landing(prefill){
     el("div",{class:"panel"}, el("h2",{style:"margin-top:0"},"怎麼進行"),
       el("ol",{class:"steps"}, ["填寫下面的報名資料。","到信箱收信，點信裡的連結。","孩子作答，約 12 分鐘。","做完立刻看到結果。"].map(x=>el("li",{},x)))),
     el("div",{class:"panel",id:"regPanel"}, el("h2",{style:"margin-top:0"},"報名"),
-      !API ? el("p",{class:"note",id:"notReady"},"網站還沒有完成設定，暫時無法報名。")
+      !API ? [el("p",{class:"note",id:"notReady"},"網站還沒有完成設定，暫時無法報名。"), adminHint()]
       : REG_OPEN ? form : el("p",{id:"closed"},"測驗即將開放報名。")),
     el("div",{class:"panel"}, el("details",{id:"haveCode"}, el("summary",{},"已經報名過？輸入信裡的代碼"),
       el("div",{class:"row",style:"margin-top:10px"}, code, el("button",{class:"btn sec",id:"goCode",onclick:()=>{ if(code.value.trim()) goToken(code.value); }},"前往")))),
@@ -580,7 +589,46 @@ function landing(prefill){
       DEMO_OK?el("button",{class:"link",id:"demo",onclick:()=>enter("demo")},"試用版（不儲存成績）"):null));
   if("speechSynthesis" in window) speechSynthesis.getVoices();
 }
-function start(){ if(TOKEN_Q) openToken(TOKEN_Q); else landing(); }
+/* ---------- 設定檢查：網址加上 ?check=1 ---------- */
+async function checkScreen(){
+  const list=el("div",{id:"checks"});
+  const add=(state,title,detail)=>{ const mark={ok:"✅",bad:"❌",warn:"⚠️",info:"ℹ️"}[state];
+    list.append(el("div",{class:"st","data-state":state}, el("div",{class:"nm"}, `${mark} ${title}`, detail?el("small",{style:"font-size:.9rem;line-height:1.6"},detail):null))); };
+  mount(el("h1",{},"設定檢查"), el("p",{class:"muted"},"這一頁給管理者用，逐項檢查網站和後端的設定。修正後重新整理就會再檢查一次。"), el("div",{class:"panel"}, list),
+    el("p",{}, el("a",{href:location.pathname},"回到首頁")));
+  // 1 config.js
+  if(!window.GATE_CONFIG){ add("bad","config.js 沒有載入","檔案沒有上傳到 site 資料夾，或檔案裡有語法錯誤。最常見的是引號被文字編輯器改成彎引號（“ ”）或全形引號，或是少了行尾的逗號。請在瀏覽器直接打開「網站網址/config.js」看看內容。"); return; }
+  add("ok","config.js 已載入");
+  // 2 SHEET_API
+  if(!SHEET || /PASTE_YOUR/.test(SHEET)){ add("bad","SHEET_API 還沒有填","網站上的 config.js 仍是預設的佔位文字。如果你已經改過，代表改過的檔案沒有傳到 GitHub 的 site 資料夾，或 Netlify 還沒有重新發佈。"); return; }
+  if(!API){ add("bad","SHEET_API 的格式不對","目前的內容是「"+SHEET+"」，應該是 https:// 開頭的網址。"); return; }
+  if(/\/dev(\?|$)/.test(SHEET)) add("bad","SHEET_API 是測試用網址","結尾是 /dev 的網址只有你自己登入時能用。請改用「部署 → 管理部署作業」裡結尾是 /exec 的網址。");
+  else if(!/^https:\/\/script\.google\.com\/macros\/s\/[^\/]+\/exec$/.test(SHEET)) add("warn","SHEET_API 看起來不像 Apps Script 的網址","目前的內容是「"+SHEET+"」。正確的樣子是 https://script.google.com/macros/s/一長串代碼/exec");
+  else add("ok","SHEET_API 的格式正確");
+  // 3 連線
+  let j=null, text="";
+  try{ const r=await fetch(API+"?action=ping",{signal:timeout(20000)}); text=await r.text(); j=JSON.parse(text); }
+  catch(e){ add("bad","連不上後端", text ? "後端回傳的不是資料，而是一個網頁。通常是部署時「誰可以存取」沒有選「所有人」，或這個網址不是網頁應用程式的網址。"
+      : "瀏覽器無法取得回應。最常見的原因是部署時「誰可以存取」沒有選「所有人」（選成「只有我自己」或「擁有 Google 帳戶的任何人」都不行），其次是網址貼錯。"); return; }
+  if(!j || j.service!=="phonics-gate"){ add("bad","後端是舊版的程式","連得上，但後端沒有回報版本，代表正在執行的不是最新的 Code.gs。請把新版 Code.gs 貼上、儲存，再到「部署 → 管理部署作業 → 編輯 → 版本選『新版本』→ 部署」。只按儲存不會生效；另外按「新增部署作業」會產生一個新的網址，舊網址仍然執行舊程式。"); return; }
+  add("ok","後端連線正常","後端版本："+j.version);
+  // 4 SITE_URL
+  if(!j.site_url_ok) add("bad","後端的 SITE_URL 還沒有填好","請在 Apps Script 把 Code.gs 最上面的 SITE_URL 改成這個網站的網址，儲存後以「新版本」重新部署。現在按「送出報名」會出現「報名系統還沒有完成設定」。");
+  else { const here=location.origin+location.pathname.replace(/index\.html$/,"");
+    if(j.site_url===here) add("ok","後端的 SITE_URL 正確", j.site_url);
+    else add("warn","後端的 SITE_URL 和現在這個網址不同","信裡的連結會連到 "+j.site_url+"，而你現在開的是 "+here+"。如果前者是你的正式網域，可以忽略；否則請修正 SITE_URL。"); }
+  // 5 其他設定
+  add(CFG.REGISTRATION_OPEN===true?"ok":"info", CFG.REGISTRATION_OPEN===true?"報名已開放":"報名尚未開放", CFG.REGISTRATION_OPEN===true?null:"首頁只會顯示「測驗即將開放報名」。自己測試時，在網址後面加上 ?preview=1 就能看到表單。");
+  add(CFG.BOOKING_URL?"ok":"info", CFG.BOOKING_URL?"預約諮詢按鈕已設定":"沒有設定預約諮詢網址", CFG.BOOKING_URL||"結果頁不會顯示預約諮詢按鈕。");
+  add(CFG.ALLOW_INCOMPLETE_ASSETS===true?"warn":"ok", CFG.ALLOW_INCOMPLETE_ASSETS===true?"允許素材不齊時作答（測試用）":"素材不齊時不能作答", CFG.ALLOW_INCOMPLETE_ASSETS===true?"正式開放前請改回 false。":null);
+  // 6 素材
+  const imgs=requiredImages(), auds=requiredAudio(); let mi=0, ma=0;
+  await pool(imgs, 8, async f=>{ if(!(await probeImage(f))) mi++; }, ()=>{});
+  await pool(auds, 8, async k=>{ try{ const r=await fetch(CFG.audioDir+k+".mp3",{method:"HEAD"}); if(!r.ok||/text\/html/.test(r.headers.get("content-type")||"")) ma++; }catch(e){ ma++; } }, ()=>{});
+  add(mi||ma?"info":"ok", mi||ma?"素材還沒有齊全":"素材齊全", `圖片 ${imgs.length-mi} / ${imgs.length}，錄音 ${auds.length-ma} / ${auds.length}。`+(mi||ma?"齊全之前，家長點連結會看到「測驗還在準備中」。":""));
+  list.dataset.done="1";
+}
+function start(){ if(qs.get("check")==="1") checkScreen(); else if(TOKEN_Q) openToken(TOKEN_Q); else landing(); }
 start();
 })();
 </script>
