@@ -1,7 +1,7 @@
 /* 網站設定。改完存檔、上傳到 GitHub 就會生效。 */
 window.GATE_CONFIG = {
   /* 部署好的 Apps Script 網址（結尾是 /exec），保留前後的引號。 */
-  SHEET_API: "https://script.google.com/macros/s/AKfycbwhmaOKIXdMT6dPmGQXUNwfJrpupz6NrDhHqfXPc1O5EF2Gt_xGHCLauhkxS5PGBQREXg/exec
+  SHEET_API: "https://script.google.com/macros/s/AKfycbwURdlxu5wB4IPZYuKwM51_WUu2gSlCGJDit4dQl_5B-h0EOSSsUuNLqifSRWtUzG934w/exec
 ",
 
   /* 是否開放報名。false 時首頁不顯示報名表單，只顯示「即將開放」。
