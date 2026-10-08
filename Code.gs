@@ -15,7 +15,7 @@
  */
 
 /* ===== 部署前請填這三項 ===== */
-const SITE_URL = 'PASTE_YOUR_SITE_URL_HERE';   // 測驗網站的網址，結尾要有斜線，例如 https://gate.example.com/
+const SITE_URL = 'https://pre-phonics-test.netlify.app/';   // 測驗網站的網址，結尾要有斜線，例如 https://gate.example.com/
 const SENDER_NAME = 'Phonics 入門門檻測驗';      // 信件上顯示的寄件人名稱
 const NOTIFY_EMAIL = '';                         // 有孩子完成測驗時通知這個信箱；留空就不通知
 /* ============================ */
