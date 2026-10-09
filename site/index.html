@@ -634,6 +634,7 @@ async function checkScreen(){
     else add("warn","後端的 SITE_URL 和現在這個網址不同","信裡的連結會連到 "+j.site_url+"，而你現在開的是 "+here+"。如果前者是你的正式網域，可以忽略；否則請修正 SITE_URL。"); }
   // 5 其他設定
   add(CFG.REGISTRATION_OPEN===true?"ok":"info", CFG.REGISTRATION_OPEN===true?"報名已開放":"報名尚未開放", CFG.REGISTRATION_OPEN===true?null:"首頁只會顯示「測驗即將開放報名」。自己測試時，在網址後面加上 ?preview=1 就能看到表單。");
+  add(j.admin?"ok":"info", j.admin?"老師檢閱頁已開啟":"老師檢閱頁尚未開啟", j.admin?"網址：網站網址/teacher.html":"在 Code.gs 設定 ADMIN_PASSWORD，並以「新版本」重新部署。");
   add(CFG.BOOKING_URL?"ok":"info", CFG.BOOKING_URL?"預約諮詢按鈕已設定":"沒有設定預約諮詢網址", CFG.BOOKING_URL||"結果頁不會顯示預約諮詢按鈕。");
   add(CFG.ALLOW_INCOMPLETE_ASSETS===true?"warn":"ok", CFG.ALLOW_INCOMPLETE_ASSETS===true?"允許素材不齊時作答（測試用）":"素材不齊時不能作答", CFG.ALLOW_INCOMPLETE_ASSETS===true?"正式開放前請改回 false。":null);
   // 6 素材

@@ -88,6 +88,19 @@
 2. `REGISTRATION_OPEN` 改成 `true`。
 3. 上傳。之後首頁的學習地圖連到這個網站的網址即可。
 
+## 老師檢閱頁
+
+網址是「網站網址/teacher.html」，例如 `https://pre-phonics-test.netlify.app/teacher.html`。用密碼登入後可以：
+
+- 看所有報名的孩子：完成時間、結果、各部分題數（綠色達到建議起點、黃色接近、紅色未達），也看得到報名了但還沒做完的孩子。可以用名字、代碼或 Email 搜尋。
+- 點一位孩子，看逐題作答：每一題孩子選了哪張圖（紅框）、正確答案是哪張（綠框）、錯誤類型、反應時間、重聽次數，並可以播放孩子當時聽到的聲音。預設只列答錯的題目，也可以切換成全部 74 題。
+- 孩子重測過時，可以切換看每一次的作答。
+- 用瀏覽器的列印功能存成 PDF。
+
+開啟方式：在 Apps Script 的 `Code.gs` 最上面設定 `ADMIN_PASSWORD`（10 個字以上、不容易猜），儲存後以「管理部署作業 → 編輯 → 新版本」部署。沒設定密碼時，檢閱頁不能使用。
+
+密碼只保存在瀏覽器的這個分頁，關掉分頁就要重新輸入。密碼連續錯 10 次會鎖 15 分鐘。這一頁會顯示家長的姓名和 Email，請不要把密碼給其他人。
+
 ## 日常管理
 
 所有管理都在試算表裡做。
@@ -175,7 +188,8 @@
 2. 輸入 `python3 workflow/make_audio.py`，按 Enter。第一次執行時，Mac 可能會要求安裝「開發者工具」，按安裝，裝好再執行一次。
 3. 依提示貼上金鑰（畫面上不會顯示），按 Enter。89 個檔案約需幾分鐘。
 4. 用瀏覽器打開 `workflow/review.html`，到「錄音試聽」分頁。第二部分的每一組按「▶ 整組」，會照測驗的順序連續播放兩個詞。
-5. 聽不清楚的檔案按「標記重做」並寫原因，按「下載重做清單」，把 `redo-list.csv` 放進 `workflow/`，再執行：
+5. 按「▶ 全部依序播放」可以一次聽完全部 89 個。按「自動檢查音量」會找出幾乎沒有聲音、太短或太長的檔案。自動檢查需要用本機伺服器打開這一頁：在專案資料夾的終端機執行 `python3 -m http.server`，再用瀏覽器打開 `http://localhost:8000/workflow/review.html`（用完按 Control+C 關掉）。上線後，`?check=1` 設定檢查頁也會做同樣的檢查。
+6. 聽不清楚的檔案按「標記重做」並寫原因，按「下載重做清單」，把 `redo-list.csv` 放進 `workflow/`，再執行：
 
 ```
 python3 workflow/make_audio.py --redo workflow/redo-list.csv
@@ -190,6 +204,9 @@ python3 workflow/make_audio.py --redo workflow/redo-list.csv
 | `python3 workflow/make_audio.py --voice cedar` | 換一個聲音（預設 `marin`；也可以試 `coral`、`sage` 等） |
 | `python3 workflow/make_audio.py --force` | 全部重做，例如換了聲音之後 |
 | `python3 workflow/make_audio.py --list` | 只列出會產生哪些檔案，不呼叫 API |
+| `python3 workflow/make_audio.py --workers 1` | 一次只產生一個。出現很多「HTTP 429」時使用 |
+
+每個檔案正常只要幾秒，畫面上會顯示每個檔案花了多久；遇到重試會寫出原因。按 Control+C 可以隨時中斷，已完成的檔案會保留，再執行一次會從缺的開始。
 
 全部 89 個檔案最好用同一個聲音。換聲音時請加 `--force` 全部重做。朗讀的語氣指示寫在 `make_audio.py` 開頭的 `STYLE`，要調整可以直接改。
 

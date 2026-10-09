@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>老師檢閱｜Phonics 入門門檻測驗</title>
+<style>
+:root{--bg:#f6f3ec;--ink:#22303c;--muted:#6b7780;--card:#fff;--line:#d9d3c5;--accent:#2f6fb0;--ok:#2e8b57;--warn:#c0392b;--soft:#e9eff6;--mid:#8a6200}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",Arial,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:.2em 0}
+h2{font-size:1.1rem;margin:1.2em 0 .5em}
+.muted{color:var(--muted);font-size:.9rem}
+.err{color:var(--warn)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+button,input,select{font:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 14px}
+button.pri{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+input[type=password],input[type=search]{padding:10px 12px;border:1px solid var(--line);border-radius:10px;width:100%;max-width:320px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:middle}
+th{color:var(--muted);font-weight:600;white-space:nowrap}
+tr.click{cursor:pointer} tr.click:hover{background:var(--soft)}
+.scroll{overflow-x:auto}
+.tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.8rem;font-weight:600;white-space:nowrap}
+.tag.ok{background:#dff3e6;color:var(--ok)} .tag.no{background:#fbe3df;color:var(--warn)} .tag.mid{background:#fdf0cf;color:var(--mid)} .tag.gray{background:#eceae4;color:var(--muted)}
+.item{display:grid;grid-template-columns:150px 1fr;gap:12px;border-bottom:1px solid var(--line);padding:12px 0}
+.item:last-child{border-bottom:0}
+.item .meta{font-size:.88rem;line-height:1.6}
+.item .meta b{font-size:1rem}
+.pics{display:flex;gap:10px;flex-wrap:wrap}
+.pic{width:150px;border:3px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;font-size:.8rem}
+.pic img{width:100%;aspect-ratio:1/1;object-fit:contain;display:block}
+.pic .ph{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;color:var(--muted)}
+.pic .cap{padding:4px 6px;border-top:1px solid var(--line)}
+.pic.chosen{border-color:var(--warn)} .pic.right{border-color:var(--ok)}
+.pic.chosen.right{border-color:var(--ok)}
+.lab{font-weight:600} .pic.chosen .lab{color:var(--warn)} .pic.right .lab{color:var(--ok)}
+.ans{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.ans span{padding:6px 12px;border-radius:10px;border:2px solid var(--line);background:#fff}
+.ans .chosen{border-color:var(--warn);color:var(--warn)} .ans .right{border-color:var(--ok);color:var(--ok)}
+.sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.sum div{background:var(--soft);border-radius:10px;padding:8px 10px;font-size:.88rem}
+.sum b{display:block;font-size:1.15rem}
+.hide{display:none}
+@media (max-width:640px){.item{grid-template-columns:1fr}.pic{width:120px}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script src="config.js"></script>
+<script src="data/items.js"></script>
+<script>
+(function(){
+"use strict";
+const CFG=Object.assign({SHEET_API:"",imageDir:"assets/images/",audioDir:"assets/audio/"}, window.GATE_CONFIG||{});
+const API=String(CFG.SHEET_API||"").trim(), G=window.GATE, app=document.getElementById("app");
+const ITEM={}; ["A","A_practice","B","B_practice","C","C_practice"].forEach(k=>G[k].forEach(it=>ITEM[it.id]=it));
+const el=(t,a={},...k)=>{const e=document.createElement(t);for(const[x,v]of Object.entries(a)){if(x==="class")e.className=v;else if(x.startsWith("on"))e.addEventListener(x.slice(2),v);else if(v!=null&&v!==false)e.setAttribute(x,v===true?"":v);}for(const c of k.flat())if(c!=null&&c!==false)e.append(c.nodeType?c:document.createTextNode(c));return e;};
+const ss={ get(k){ try{ return sessionStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ sessionStorage.setItem(k,v); }catch(e){} }, del(k){ try{ sessionStorage.removeItem(k); }catch(e){} } };
+let PW=ss.get("gate-admin")||"";
+const ERRS={ bad_password:"密碼不正確。", admin_locked:"密碼錯誤太多次，請 15 分鐘後再試。", admin_disabled:"檢閱頁還沒有開啟：請在 Code.gs 設定 ADMIN_PASSWORD，並以「新版本」重新部署。", token_not_found:"找不到這位學生。" };
+async function call(body){ const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({password:PW},body))}); return r.json(); }
+const fmt=v=>{ if(!v) return ""; const d=new Date(v); return isNaN(d)?String(v):d.toLocaleString("zh-TW",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}); };
+const PARTS=[["A_stage1","第一階段詞",24,"A1"],["A_ctrl","對照詞",8,"CTRL"],["B_diff","「不同」題",16,"B_DIFF"],["B_same","「相同」題",8,"B_SAME"],["C","句子",18,"C"]];
+const CODE={ready:"可以開始",sent:"可開始，持續累積聽力",disc:"可開始，搭配聽辨",bias:"第二部分需確認",phon:"先聽熟第一階段的詞",vocab:"先認識第一階段的詞",ctrl:"多聽一段時間後再測"};
+function partTag(k,c){ const p=PARTS.find(x=>x[0]===k), need=G.thresholds[p[3]], n=Number(c)||0;
+  const cls = n>=need?"ok": n>=need-(p[2]>=16?2:1)?"mid":"no"; return el("span",{class:"tag "+cls},`${n}/${p[2]}`); }
+function play(files){ (async()=>{ for(const f of files){ await new Promise(res=>{ const a=new Audio(CFG.audioDir+f+".mp3"); a.onended=res; a.onerror=res; a.play().catch(res); }); await new Promise(r=>setTimeout(r,500)); } })(); }
+function pic(file,label,cls,lab){ const box=el("div",{class:"pic "+(cls||"")});
+  const img=el("img",{src:CFG.imageDir+file+".jpg",alt:label}); img.onerror=()=>img.replaceWith(el("div",{class:"ph"},label));
+  box.append(img, el("div",{class:"cap"}, lab?el("div",{class:"lab"},lab):null, label)); return box; }
+
+/* ---------- 登入 ---------- */
+function login(msg){
+  const pw=el("input",{type:"password",id:"pw",placeholder:"檢閱頁密碼",autocomplete:"current-password"}), m=el("p",{class:"err",id:"loginMsg"},msg||"");
+  const go=async()=>{ PW=pw.value; m.textContent="檢查中…"; await list(m); };
+  pw.addEventListener("keydown",e=>{ if(e.key==="Enter") go(); });
+  app.replaceChildren(el("h1",{},"老師檢閱"), el("div",{class:"panel"}, el("div",{class:"row"}, pw, el("button",{class:"pri",id:"loginBtn",onclick:go},"登入")), m,
+    el("p",{class:"muted"},"這一頁只給老師使用，資料包含家長的聯絡方式。密碼只保存在這個瀏覽器分頁，關掉分頁就要重新輸入。")));
+  if(!API||/PASTE_YOUR/.test(API)) m.textContent="網站的 config.js 還沒有設定 SHEET_API。";
+  pw.focus();
+}
+/* ---------- 學生清單 ---------- */
+let STUDENTS=[];
+async function list(msgEl){
+  let j; try{ j=await call({action:"admin_list"}); }catch(e){ (msgEl||{}).textContent="連不上後端，請稍後再試。"; return; }
+  if(!j.ok){ ss.del("gate-admin"); if(msgEl&&msgEl.isConnected) msgEl.textContent=ERRS[j.error]||j.error; else login(ERRS[j.error]||j.error); return; }
+  ss.set("gate-admin",PW); STUDENTS=j.students; renderList();
+}
+function renderList(){
+  const q=el("input",{type:"search",id:"q",placeholder:"搜尋名字、代碼或 Email"}), only=el("select",{id:"only"}, ["全部","已完成","報名未完成"].map(x=>el("option",{},x)));
+  const tbody=el("tbody");
+  const draw=()=>{ const s=q.value.trim().toLowerCase(), f=only.value;
+    const rows=STUDENTS.filter(x=>(!s||[x.child_name,x.token,x.email,x.parent_name].join(" ").toLowerCase().includes(s)) && (f==="全部"||(f==="已完成"?x.attempts>0:x.attempts===0)))
+      .sort((a,b)=>new Date((b.last&&b.last.finished_at)||b.registered_at)-new Date((a.last&&a.last.finished_at)||a.registered_at));
+    tbody.replaceChildren(...rows.map(x=>{ const L=x.last;
+      const tr=el("tr",{class:x.attempts?"click":"","data-token":x.token},
+        el("td",{}, el("b",{},x.child_name), el("div",{class:"muted"},x.token)), el("td",{}, x.age?x.age+" 歲":""),
+        el("td",{}, x.parent_name, el("div",{class:"muted"},x.email)),
+        el("td",{}, L?fmt(L.finished_at||L.attempt_at):el("span",{class:"tag gray"}, x.started_at?"開始未完成":x.verified_at?"已點連結":"已報名")),
+        el("td",{}, L?el("span",{},CODE[L.result_code]||L.profile, L.assets==="incomplete"?el("span",{class:"tag no",style:"margin-left:6px"},"素材不齊"):null):""),
+        ...PARTS.map(p=>el("td",{}, L?partTag(p[0],L[p[0]]):"")),
+        el("td",{}, x.attempts>1?x.attempts+" 次":""));
+      if(x.attempts) tr.addEventListener("click",()=>detail(x.token)); return tr; }));
+    count.textContent=`共 ${rows.length} 位`; };
+  const count=el("span",{class:"muted"});
+  q.addEventListener("input",draw); only.addEventListener("change",draw);
+  app.replaceChildren(el("div",{class:"row",style:"justify-content:space-between"}, el("h1",{},"老師檢閱"), el("button",{onclick:()=>{ ss.del("gate-admin"); PW=""; login(); }},"登出")),
+    el("div",{class:"row"}, q, only, count, el("button",{onclick:()=>list()},"重新整理")),
+    el("div",{class:"panel scroll"}, el("table",{id:"students"}, el("thead",{}, el("tr",{}, ...["孩子","年齡","家長","完成時間","結果",...PARTS.map(p=>p[1]),"次數"].map(h=>el("th",{},h)))), tbody)),
+    el("p",{class:"muted"},"點一位已完成的孩子，可以看逐題作答。題數的顏色：綠色達到建議起點，黃色接近，紅色未達。"));
+  draw();
+}
+/* ---------- 單一孩子的作答 ---------- */
+async function detail(token, attemptId){
+  app.replaceChildren(el("p",{class:"muted"},"讀取中…"));
+  let j; try{ j=await call({action:"admin_attempt",token,attempt_id:attemptId||""}); }catch(e){ app.replaceChildren(el("p",{class:"err"},"連不上後端。"), el("button",{onclick:renderList},"回到清單")); return; }
+  if(!j.ok){ if(/password|locked/.test(j.error)) return login(ERRS[j.error]); app.replaceChildren(el("p",{class:"err"},ERRS[j.error]||j.error), el("button",{onclick:renderList},"回到清單")); return; }
+  const st=j.student, A=j.attempt, R=j.responses;
+  let showAll=false; const body=el("div",{id:"items"});
+  const toggle=el("button",{id:"toggleAll"},"也顯示答對的題目");
+  toggle.addEventListener("click",()=>{ showAll=!showAll; toggle.textContent=showAll?"只顯示答錯的題目":"也顯示答對的題目"; draw(); });
+  const pick=j.attempts.length>1 ? el("select",{id:"attemptPick"}, j.attempts.map((a,i)=>el("option",{value:a.attempt_id,selected:String(a.attempt_id)===String(A.attempt_id)},`第 ${i+1} 次　${fmt(a.attempt_at)}`))) : null;
+  if(pick) pick.addEventListener("change",()=>detail(token,pick.value));
+  function section(title, rows, render){ const wrong=rows.filter(r=>Number(r.correct)!==1), shown=showAll?rows:wrong;
+    return el("div",{class:"panel","data-section":title}, el("h2",{style:"margin-top:0"},`${title}　答錯 ${wrong.length} / ${rows.length} 題`),
+      shown.length? shown.map(render) : el("p",{class:"muted"},"沒有答錯的題目。")); }
+  function draw(){
+    const by=k=>R.filter(r=>k.includes(r.subtest)).sort((a,b)=>String(a.item_id).localeCompare(String(b.item_id)));
+    body.replaceChildren(
+      section("第一部分：聽詞選圖", by(["A_stage1","A_ctrl"]), r=>{ const it=ITEM[r.item_id]; if(!it) return el("div",{},r.item_id);
+        const ok=Number(r.correct)===1, chosen=it.options.find(o=>o.w===r.response), right=it.options.find(o=>o.role==="target");
+        return el("div",{class:"item","data-item":r.item_id}, el("div",{class:"meta"}, el("b",{},r.item_id), el("div",{}, it.group==="control"?"對照詞":"第一階段詞"+(it.contrast?"　"+it.pos+" "+it.contrast:"")),
+            el("button",{onclick:()=>play(["w_"+it.target])},"▶ 播放 "+it.target), el("div",{class:"muted"}, `${(Number(r.rt_ms)/1000).toFixed(1)} 秒　重聽 ${r.replays} 次`), !ok?el("span",{class:"tag no"},r.error_type):null),
+          el("div",{class:"pics"}, it.options.map(o=>{ const isC=chosen&&o.w===chosen.w, isR=o.role==="target";
+            return pic("w_"+o.w, o.w, (isC?"chosen ":"")+(isR?"right":""), isR&&isC?"孩子選的（正確）":isR?"正確答案":isC?"孩子選的":""); }))); }),
+      section("第二部分：一樣或不一樣", by(["B_diff","B_same"]), r=>{ const it=ITEM[r.item_id]; if(!it) return el("div",{},r.item_id);
+        const words=String(r.stimulus).split(" – "), files=it.answer==="same"?["w_"+words[0],"w_"+words[0]+"_2"]:words.map(w=>"w_"+w);
+        const right=it.answer==="same"?"一樣":"不一樣";
+        return el("div",{class:"item","data-item":r.item_id}, el("div",{class:"meta"}, el("b",{},r.item_id), el("div",{}, it.contrast?it.cat+" "+it.contrast:"「相同」題"),
+            el("button",{onclick:()=>play(files)},"▶ 播放這一組"), el("div",{class:"muted"}, `${(Number(r.rt_ms)/1000).toFixed(1)} 秒　重聽 ${r.replays} 次`), Number(r.correct)!==1?el("span",{class:"tag no"},r.error_type):null),
+          el("div",{}, el("p",{style:"margin:.2em 0 .6em;font-size:1.1rem"}, r.stimulus),
+            el("div",{class:"ans"}, ["一樣","不一樣"].map(x=>el("span",{class:(x===r.response?"chosen ":"")+(x===right?"right":"")}, x+(x===right&&x===r.response?"（孩子選的，正確）":x===right?"（正確答案）":x===r.response?"（孩子選的）":"")))))); }),
+      section("第三部分：聽句子選圖", by(["C"]), r=>{ const it=ITEM[r.item_id]; if(!it) return el("div",{},r.item_id);
+        const chosen=it.options.find(o=>o.desc===r.response);
+        return el("div",{class:"item","data-item":r.item_id}, el("div",{class:"meta"}, el("b",{},r.item_id), el("div",{},"層級 "+it.level),
+            el("button",{onclick:()=>play([it.id.toLowerCase()])},"▶ 播放句子"), el("div",{class:"muted"}, `${(Number(r.rt_ms)/1000).toFixed(1)} 秒　重聽 ${r.replays} 次`), Number(r.correct)!==1?el("span",{class:"tag no"},"換了"+r.error_type):null),
+          el("div",{}, el("p",{style:"margin:.2em 0 .6em;font-size:1.05rem"}, it.sentence),
+            el("div",{class:"pics"}, it.options.map(o=>{ const isC=chosen&&o.img===chosen.img, isR=o.role==="target";
+              return pic(o.img, o.desc, (isC?"chosen ":"")+(isR?"right":""), isR&&isC?"孩子選的（正確）":isR?"正確答案":isC?"孩子選的":""); })))); }));
+  }
+  app.replaceChildren(
+    el("div",{class:"row",style:"justify-content:space-between"}, el("button",{id:"back",onclick:renderList},"← 回到清單"), el("button",{onclick:()=>window.print()},"列印")),
+    el("h1",{}, `${st.child_name}　`, el("span",{class:"muted"}, `${st.age?st.age+" 歲　":""}${st.token}`)),
+    el("p",{class:"muted"}, `家長：${st.parent_name}　${st.email}${st.experience?"　接觸英文："+st.experience:""}`),
+    el("div",{class:"panel"}, el("div",{class:"row"}, pick, el("span",{}, `完成於 ${fmt(A.finished_at||A.attempt_at)}　作答 ${Math.round((Number(A.duration_s)||0)/60)} 分鐘`)),
+      el("p",{}, el("b",{}, CODE[A.result_code]||A.profile), A.borderline===true||A.borderline==="TRUE"?el("span",{class:"tag mid",style:"margin-left:8px"},"接近門檻"):null,
+        A.assets==="incomplete"?el("span",{class:"tag no",style:"margin-left:8px"},"素材不齊，成績不採計"):null, el("span",{class:"muted"},"　判讀："+A.profile)),
+      el("div",{class:"sum"}, PARTS.map(p=>el("div",{}, el("b",{}, partTag(p[0],A[p[0]])), p[1]))),
+      el("p",{class:"muted",style:"margin-bottom:0"}, `練習題答錯：第一部分 ${A.practice_A} 次、第二部分 ${A.practice_B} 次、第三部分 ${A.practice_C} 次`)),
+    el("div",{class:"row"}, toggle, el("span",{class:"muted"},"紅框是孩子選的，綠框是正確答案。")), body);
+  draw();
+}
+if(PW) list(); else login();
+})();
+</script>
+</body>
+</html>
