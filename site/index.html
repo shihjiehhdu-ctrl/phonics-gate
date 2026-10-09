@@ -140,15 +140,29 @@ async function apiPost(body, ms){ const r = await fetch(API, {method:"POST", hea
 /* ---------- 聲音：錄音檔用 Web Audio 播放；試用版缺檔時改用瀏覽器語音 ---------- */
 let ctx=null, currentSrc=null; const buffers=new Map();
 function ensureCtx(){ const AC=window.AudioContext||window.webkitAudioContext; if(!ctx && AC){ try{ ctx=new AC(); }catch(e){} } if(ctx && ctx.state==="suspended") ctx.resume(); }
+const silentClips = new Set();      // 檔案存在、但幾乎沒有聲音的錄音（語音合成偶爾會產生）
 async function loadClip(key){
   if (buffers.has(key)) return buffers.get(key);
   let buf=null;
   if (ctx && location.protocol!=="file:") { try { const r=await fetch(CFG.audioDir+key+".mp3");
     if (r.ok && !/text\/html/.test(r.headers.get("content-type")||"")) { const ab=await r.arrayBuffer(); buf=await new Promise((res,rej)=>ctx.decodeAudioData(ab,res,rej)); } } catch(e){ buf=null; } }
+  if (buf) { const d=buf.getChannelData(0); let peak=0; for(let i=0;i<d.length;i+=4){ const v=Math.abs(d[i]); if(v>peak) peak=v; }
+    if (peak<0.02) { silentClips.add(key); buf=null; } }          // 沒有聲音的檔案當成缺檔
   buffers.set(key, buf); return buf;
 }
+/* 確保音訊引擎在運作。iPad／iPhone 在切換 App、鎖定螢幕或來電後，會把它暫停 */
+async function ensureRunning(){
+  if (!ctx) return false;
+  if (ctx.state!=="running") { try { await Promise.race([ctx.resume(), new Promise(r=>setTimeout(r,1500))]); } catch(e){} }
+  return ctx.state==="running";
+}
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden && ctx && ctx.state!=="running") ctx.resume().catch(()=>{}); });
+let currentEl=null;
 function playBuffer(buf){ return new Promise(res => { let done=false; const fin=()=>{ if(!done){ done=true; res(); } };
   const s=ctx.createBufferSource(); s.buffer=buf; s.connect(ctx.destination); s.onended=fin; currentSrc=s; s.start(); setTimeout(fin, buf.duration*1000+500); }); }
+/* 音訊引擎恢復不了時，改用一般的音訊元件播放同一個檔案 */
+function playElement(url){ return new Promise(res => { let done=false; const fin=()=>{ if(!done){ done=true; res(); } };
+  const a=new Audio(url); currentEl=a; a.onended=fin; a.onerror=fin; const p=a.play(); if(p&&p.catch) p.catch(fin); setTimeout(fin, 8000); }); }
 function tts(text, lang, rate){
   return new Promise(res => {
     if (!("speechSynthesis" in window)) { res(false); return; }
@@ -160,11 +174,12 @@ function tts(text, lang, rate){
   });
 }
 async function playClip(key, text, lang, rate, altKey){
-  let buf = await loadClip(key); if (!buf && altKey) buf = await loadClip(altKey);
-  if (buf) return playBuffer(buf);
+  let used=key, buf = await loadClip(key); if (!buf && altKey) { buf = await loadClip(altKey); used=altKey; }
+  if (buf) { if (await ensureRunning()) return playBuffer(buf); return playElement(CFG.audioDir+used+".mp3"); }
   return tts(text, lang, rate);
 }
-function stopSound(){ try{ currentSrc && currentSrc.stop(); }catch(e){} try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){} }
+if (LOCAL) window.__gateAudio = () => ({ ctx, silent:[...silentClips] });   // 只在本機測試時使用
+function stopSound(){ try{ currentSrc && currentSrc.stop(); }catch(e){} try{ currentEl && currentEl.pause(); }catch(e){} try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){} }
 const sayWord = (w, take) => take===2 ? playClip("w_"+w+"_2", w, "en-US", CFG.wordRate, "w_"+w) : playClip("w_"+w, w, "en-US", CFG.wordRate);
 const saySentence = it => playClip(it.id.toLowerCase(), it.sentence, "en-US", CFG.sentenceRate);
 
@@ -189,7 +204,7 @@ async function preflight(){
   missingImg.clear(); let missAud=0;
   await pool(imgs, 8, async f=>{ if(!(await probeImage(f))) missingImg.add(f); }, tick);
   await pool(auds, 6, async k=>{ if(!(await loadClip(k))) missAud++; }, tick);
-  S.missing={img:missingImg.size, aud:missAud}; S.assets=(missingImg.size||missAud)?"incomplete":"complete";
+  S.missing={img:missingImg.size, aud:missAud, silent:[...silentClips]}; S.assets=(missingImg.size||missAud)?"incomplete":"complete";
 }
 
 /* ---------- 圖片 ---------- */
@@ -480,7 +495,7 @@ const contactLine = () => CFG.CONTACT_EMAIL ? el("span",{}, "　有問題請來�
 function blocked(){
   mount(el("h1",{},TITLE), el("div",{class:"panel"},
     el("p",{class:"note",id:"blocked"},"測驗還在準備中，暫時無法開始。請過幾天再點同一個連結。"),
-    el("p",{class:"muted"},`（缺圖 ${S.missing.img} 張、缺錄音 ${S.missing.aud} 個）`, contactLine()),
+    el("p",{class:"muted"},`（缺圖 ${S.missing.img} 張、缺錄音 ${S.missing.aud} 個${S.missing.silent&&S.missing.silent.length?"，其中沒有聲音的："+S.missing.silent.map(k=>k+".mp3").join("、"):""}）`, contactLine()),
     el("div",{class:"row"}, DEMO_OK?el("button",{class:"btn sec",id:"toDemo",onclick:()=>enter("demo")},"使用試用版"):null, el("button",{class:"btn",onclick:start},"重新整理"))));
 }
 async function enter(mode, resume){
