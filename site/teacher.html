@@ -95,12 +95,12 @@ function renderList(){
   const q=el("input",{type:"search",id:"q",placeholder:"搜尋名字、代碼或 Email"}), only=el("select",{id:"only"}, ["全部","已完成","報名未完成"].map(x=>el("option",{},x)));
   const tbody=el("tbody");
   const draw=()=>{ const s=q.value.trim().toLowerCase(), f=only.value;
-    const rows=STUDENTS.filter(x=>(!s||[x.child_name,x.token,x.email,x.parent_name].join(" ").toLowerCase().includes(s)) && (f==="全部"||(f==="已完成"?x.attempts>0:x.attempts===0)))
+    const rows=STUDENTS.filter(x=>(!s||[x.child_name,x.token,x.email,x.parent_name,x.social_id].join(" ").toLowerCase().includes(s)) && (f==="全部"||(f==="已完成"?x.attempts>0:x.attempts===0)))
       .sort((a,b)=>new Date((b.last&&b.last.finished_at)||b.registered_at)-new Date((a.last&&a.last.finished_at)||a.registered_at));
     tbody.replaceChildren(...rows.map(x=>{ const L=x.last;
       const tr=el("tr",{class:x.attempts?"click":"","data-token":x.token},
         el("td",{}, el("b",{},x.child_name), el("div",{class:"muted"},x.token)), el("td",{}, x.age?x.age+" 歲":""),
-        el("td",{}, x.parent_name, el("div",{class:"muted"},x.email)),
+        el("td",{}, x.parent_name, el("div",{class:"muted"},x.email), x.social_id?el("div",{class:"muted"},"LINE／FB："+x.social_id):null),
         el("td",{}, L?fmt(L.finished_at||L.attempt_at):el("span",{class:"tag gray"}, x.started_at?"開始未完成":x.verified_at?"已點連結":"已報名")),
         el("td",{}, L?el("span",{},CODE[L.result_code]||L.profile, L.assets==="incomplete"?el("span",{class:"tag no",style:"margin-left:6px"},"素材不齊"):null):""),
         ...PARTS.map(p=>el("td",{}, L?partTag(p[0],L[p[0]]):"")),
@@ -156,7 +156,7 @@ async function detail(token, attemptId){
   app.replaceChildren(
     el("div",{class:"row",style:"justify-content:space-between"}, el("button",{id:"back",onclick:renderList},"← 回到清單"), el("button",{onclick:()=>window.print()},"列印")),
     el("h1",{}, `${st.child_name}　`, el("span",{class:"muted"}, `${st.age?st.age+" 歲　":""}${st.token}`)),
-    el("p",{class:"muted"}, `家長：${st.parent_name}　${st.email}${st.experience?"　接觸英文："+st.experience:""}`),
+    el("p",{class:"muted"}, `家長：${st.parent_name}　${st.email}${st.social_id?"　LINE／Facebook："+st.social_id:""}${st.experience?"　接觸英文："+st.experience:""}`),
     el("div",{class:"panel"}, el("div",{class:"row"}, pick, el("span",{}, `完成於 ${fmt(A.finished_at||A.attempt_at)}　作答 ${Math.round((Number(A.duration_s)||0)/60)} 分鐘`)),
       el("p",{}, el("b",{}, CODE[A.result_code]||A.profile), A.borderline===true||A.borderline==="TRUE"?el("span",{class:"tag mid",style:"margin-left:8px"},"接近門檻"):null,
         A.assets==="incomplete"?el("span",{class:"tag no",style:"margin-left:8px"},"素材不齊，成績不採計"):null, el("span",{class:"muted"},"　判讀："+A.profile)),

@@ -561,7 +561,8 @@ function landing(prefill){
   runId++; stopSound(); S.mode=null; prefill=prefill||{};
   const f = (id, attrs) => el("input", Object.assign({id, name:id, value:prefill[id]||""}, attrs));
   const parent=f("parent_name",{type:"text",maxlength:"20",autocomplete:"name",required:true}), email=f("email",{type:"email",maxlength:"100",autocomplete:"email",inputmode:"email",required:true}),
-    child=f("child_name",{type:"text",maxlength:"20",required:true}), hp=f("website",{type:"text",tabindex:"-1",autocomplete:"off"});
+    child=f("child_name",{type:"text",maxlength:"20",required:true}), hp=f("website",{type:"text",tabindex:"-1",autocomplete:"off"}),
+    social=f("social_id",{type:"text",maxlength:"80",autocomplete:"off",placeholder:"例如 LINE：abc123　或 Facebook 名稱"});
   const age=el("select",{id:"age",required:true}, el("option",{value:""},"請選擇"), [3,4,5,6,7,8,9,10,11,12].map(n=>el("option",{value:n, selected:String(prefill.age)===String(n)}, n+" 歲")));
   const exp=el("select",{id:"experience"}, ["","還沒有特別接觸","聽英文不到一年（兒歌、動畫、DWE 等）","聽英文一到兩年","聽英文兩年以上"].map(x=>el("option",{value:x, selected:prefill.experience===x}, x||"請選擇（可不填）")));
   const consent=el("input",{type:"checkbox",id:"consent"}), marketing=el("input",{type:"checkbox",id:"marketing"});
@@ -569,6 +570,7 @@ function landing(prefill){
   const form=el("form",{id:"regForm",novalidate:true},
     el("label",{for:"parent_name"},"家長的稱呼"), parent,
     el("label",{for:"email"},"Email（測驗連結會寄到這裡）"), email,
+    el("label",{for:"social_id"},"LINE 或 Facebook ID（選填，方便我們聯絡您）"), social,
     el("label",{for:"child_name"},"孩子的名字或暱稱"), child,
     el("label",{for:"age"},"孩子的年齡"), age,
     el("label",{for:"experience"},"孩子接觸英文的情況"), exp,
@@ -577,7 +579,7 @@ function landing(prefill){
     el("label",{class:"chk"}, marketing, el("span",{},"我願意收到課程與活動資訊。（可不勾）")),
     el("p",{}, submit), msg);
   form.addEventListener("submit", async e=>{ e.preventDefault(); msg.textContent="";
-    const data={action:"register", parent_name:parent.value.trim(), email:email.value.trim(), child_name:child.value.trim(), age:parseInt(age.value,10), experience:exp.value,
+    const data={action:"register", parent_name:parent.value.trim(), email:email.value.trim(), child_name:child.value.trim(), age:parseInt(age.value,10), experience:exp.value, social_id:social.value.trim(),
       consent:consent.checked, marketing:marketing.checked, website:hp.value};
     if(!data.parent_name||!data.child_name||!data.age){ msg.textContent="請填寫家長的稱呼、孩子的名字和年齡。"; return; }
     if(!/^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(data.email)){ msg.textContent=REGERR.invalid_email; return; }
@@ -589,8 +591,19 @@ function landing(prefill){
   const known=store.get("gate-token"), code=el("input",{type:"text",id:"token",placeholder:"信裡的代碼",autocomplete:"off",autocapitalize:"characters",spellcheck:"false"});
   mount(
     el("h1",{},TITLE),
-    el("p",{},"開始學 Phonics 之前，先確認孩子的耳朵準備好了沒有。這個線上測驗約 12 分鐘，孩子只需要聽和點，不需要認字。"),
-    el("p",{class:"muted"},"適合已經聽過一段時間英文（例如兒歌、動畫、DWE）、準備開始學 Phonics 的孩子。免費，每位孩子可以測一次。"),
+    el("p",{style:"font-size:1.08rem"},"開始學 Phonics 之前，先確認孩子的耳朵準備好了沒有。"),
+    el("div",{class:"panel explain",id:"about"}, el("h2",{style:"margin-top:0"},"為什麼要先測聽的基礎"),
+      el("p",{},"讀懂英文需要兩種能力：「把字唸出來」（解碼）和「聽得懂」（語言理解）。兩者是相乘的關係，任何一邊是零，結果就是零。"),
+      el("p",{},"Phonics 教的是解碼：看到字母，能唸出聲音。但唸出來的聲音，要能對上孩子本來就聽得懂的詞，才會變成意思。如果聽的基礎還不夠，孩子可能學會了拼讀，卻不知道自己念的是什麼。"),
+      el("p",{},"所以這個測驗檢查兩件事："),
+      el("ul",{}, el("li",{}, el("b",{},"聽得懂多少。"),"Phonics 第一階段會用到的詞，孩子聽不聽得懂；這些詞串成句子之後，還聽不聽得懂。"),
+        el("li",{}, el("b",{},"聽得多細。"),"發音只差一個音的詞（例如 pin 和 pan），耳朵分不分得出來。這是音素覺察（PA）的起點，也是之後把字母對到聲音的基礎。")),
+      el("p",{},"做完立刻看到結果：各部分的答對情形，以及適不適合開始 Phonics、下一步可以怎麼安排。")),
+    el("div",{class:"panel",id:"who"}, el("h2",{style:"margin-top:0"},"適合誰"),
+      el("ul",{style:"line-height:1.8;margin:0;padding-left:1.2em"},
+        el("li",{},"已經學過一陣子英文，想知道孩子基礎的理解力與聽力。"),
+        el("li",{},"已經聽過一段時間英文（例如兒歌、動畫、DWE），正在考慮開始學 Phonics。")),
+      el("p",{class:"muted",style:"margin-bottom:0"},"約 12 分鐘。孩子只需要聽和點，不需要認字。建議用平板或電腦，在安靜的地方作答。免費，每位孩子可以測一次。")),
     known&&known.t ? el("div",{class:"panel",id:"known"}, el("p",{style:"margin-top:0"}, "這台裝置上有 ", el("b",{},known.name||known.t), " 的測驗。"),
       el("button",{class:"btn",id:"goKnown",onclick:()=>goToken(known.t)},"前往")) : null,
     el("div",{class:"panel"}, el("h2",{style:"margin-top:0"},"怎麼進行"),
