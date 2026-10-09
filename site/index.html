@@ -625,6 +625,11 @@ async function checkScreen(){
   const imgs=requiredImages(), auds=requiredAudio(); let mi=0, ma=0;
   await pool(imgs, 8, async f=>{ if(!(await probeImage(f))) mi++; }, ()=>{});
   await pool(auds, 8, async k=>{ try{ const r=await fetch(CFG.audioDir+k+".mp3",{method:"HEAD"}); if(!r.ok||/text\/html/.test(r.headers.get("content-type")||"")) ma++; }catch(e){ ma++; } }, ()=>{});
+  if(ma<auds.length){ const AC=window.AudioContext||window.webkitAudioContext, ctx2=new AC(), bad=[];
+    for(const k of auds){ try{ const r=await fetch(CFG.audioDir+k+".mp3"); if(!r.ok||/text\/html/.test(r.headers.get("content-type")||"")) continue;
+        const buf=await ctx2.decodeAudioData(await r.arrayBuffer()), d=buf.getChannelData(0); let peak=0; for(let i=0;i<d.length;i++){ const v=Math.abs(d[i]); if(v>peak) peak=v; }
+        if(peak<0.02||buf.duration<0.25) bad.push(k+".mp3"); }catch(e){ bad.push(k+".mp3（無法解碼）"); } }
+    add(bad.length?"bad":"ok", bad.length?`有 ${bad.length} 個錄音幾乎沒有聲音或太短`:"錄音都有聲音", bad.length?bad.join("、")+"。請用 make_audio.py --only 重做這些檔案。":null); }
   add(mi||ma?"info":"ok", mi||ma?"素材還沒有齊全":"素材齊全", `圖片 ${imgs.length-mi} / ${imgs.length}，錄音 ${auds.length-ma} / ${auds.length}。`+(mi||ma?"齊全之前，家長點連結會看到「測驗還在準備中」。":""));
   list.dataset.done="1";
 }

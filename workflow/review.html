@@ -32,13 +32,27 @@ button.pri{background:var(--accent);color:#fff;border-color:var(--accent);font-w
 .tile.redo{border-color:var(--redo);box-shadow:0 0 0 3px var(--redo)}
 .tile input{width:100%;border:0;border-top:1px solid var(--line);padding:6px 8px;font:inherit;font-size:.8rem}
 .hide{display:none}
+.alist{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.arow{display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--line);border-radius:10px;padding:6px 8px;flex-wrap:wrap}
+.arow.redo{border-color:var(--redo);box-shadow:0 0 0 2px var(--redo)}
+.arow .t{flex:1;min-width:0;font-size:.9rem}
+.arow .t code{display:block;font-size:.72rem;color:var(--muted)}
+.arow.miss .t{color:var(--warn)}
+.arow.playing{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent)}
+.flag{display:inline-block;background:#fbe3df;color:var(--warn);border-radius:999px;padding:1px 8px;font-size:.75rem;margin-left:6px}
+.arow input{flex-basis:100%;border:1px solid var(--line);border-radius:6px;padding:4px 6px;font:inherit;font-size:.8rem}
+.play{border-radius:50%;width:38px;height:38px;padding:0;flex:none}
+.pairrow{display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:6px 0}
+.pairrow h4{margin:0;font-size:.9rem;white-space:nowrap}
+.pairrow h4 small{display:block;font-weight:400;color:var(--muted)}
+@media (max-width:640px){.pairrow{grid-template-columns:1fr}}
 @media (max-width:640px){.set{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
 <main>
 <h1>素材檢查</h1>
-<p class="muted">圖片放進 <code>site/assets/images/</code> 後重新整理本頁就會出現。點一下圖片可標記「重做」並寫下原因，最後匯出重做清單交給 GPT Work。這一頁是本機工具，不會發佈到網站上。</p>
+<p class="muted">圖片放進 <code>site/assets/images/</code>、錄音放進 <code>site/assets/audio/</code> 後，重新整理本頁就會出現。點一下圖片（或錄音的「標記重做」）可寫下原因，最後匯出重做清單：圖片交給 GPT Work，錄音用 <code>make_audio.py --redo</code> 重做。這一頁是本機工具，不會發佈到網站上。</p>
 <div class="stat" id="stat"></div>
 <div class="bar" id="tabs"></div>
 <div class="bar" id="filters"></div>
@@ -47,10 +61,12 @@ button.pri{background:var(--accent);color:#fff;border-color:var(--accent);font-w
 </main>
 <script src="../site/data/items.js"></script>
 <script src="manifest.js"></script>
+<script src="audio-manifest.js"></script>
 <script>
 (function(){
 "use strict";
-const CFG={imageDir:"../site/assets/images/"}, G=window.GATE, M=window.GATE_MANIFEST;
+const CFG={imageDir:"../site/assets/images/", audioDir:"../site/assets/audio/"}, G=window.GATE, M=window.GATE_MANIFEST, AU=window.GATE_AUDIO||[];
+const byAudio=Object.fromEntries(AU.map(a=>[a.file,a]));
 const byFile=Object.fromEntries(M.map(m=>[m.file,m]));
 const state={}; M.forEach(m=>state[m.file]={present:null});
 let marks={}; try{ marks=JSON.parse(localStorage.getItem("gate-redo")||"{}"); }catch(e){}
@@ -75,6 +91,75 @@ function tile(file, role){
   note.addEventListener("click",e=>e.stopPropagation());
   return t;
 }
+/* ---------- 錄音 ---------- */
+const audioState={}; let current=null;
+function playFile(file){ return new Promise(res=>{ if(current){ current.pause(); } const a=new Audio(CFG.audioDir+file+"?v="+Date.now()); current=a;
+  a.onended=()=>res(true); a.onerror=()=>res(false); a.play().catch(()=>res(false)); }); }
+function arow(file){
+  const m=byAudio[file]||{text:"",type:""};
+  const btn=el("button",{class:"play",title:"播放"},"▶");
+  const note=el("input",{placeholder:"重做原因，例如：聽起來像 bad",value:marks[file]||"",class:marks[file]!=null?"":"hide"});
+  const mark=el("button",{},marks[file]!=null?"取消標記":"標記重做");
+  const r=el("div",{class:"arow"+(marks[file]!=null?" redo":""),"data-file":file}, btn, el("div",{class:"t"}, m.text, el("span",{class:"flag hide"}), el("code",{},file+(m.type==="單詞第二次錄音"?"（第二次錄音）":""))), mark, note);
+  r.__mark=()=>{ if(marks[file]==null) mark.click(); };
+  btn.addEventListener("click",async()=>{ const ok=await playFile(file); if(!ok){ r.classList.add("miss"); } });
+  mark.addEventListener("click",()=>{ if(marks[file]!=null){ delete marks[file]; r.classList.remove("redo"); note.classList.add("hide"); mark.textContent="標記重做"; }
+    else { marks[file]=""; r.classList.add("redo"); note.classList.remove("hide"); mark.textContent="取消標記"; note.focus(); } save(); stats(); });
+  note.addEventListener("input",()=>{ marks[file]=note.value; save(); });
+  const probe=new Audio(); probe.preload="metadata";
+  probe.onloadedmetadata=()=>{ audioState[file]=true; audioStats(); }; probe.onerror=()=>{ audioState[file]=false; r.classList.add("miss"); audioStats(); };
+  probe.src=CFG.audioDir+file+"?v="+Date.now();
+  return r;
+}
+function audioStats(){ const box=$("audioStat"); if(!box) return; const v=Object.values(audioState);
+  box.textContent=`錄音共 ${AU.length} 個：已有 ${v.filter(x=>x).length}，缺檔 ${v.filter(x=>x===false).length}。`; }
+/* 依序播放全部錄音 */
+let stopAll=false;
+async function playAll(btn){
+  if(btn.dataset.on){ stopAll=true; return; }
+  stopAll=false; btn.dataset.on="1"; btn.textContent="■ 停止";
+  const rows=[...document.querySelectorAll("#view .arow")], seen=new Set();
+  for(const r of rows){ const f=r.dataset.file; if(stopAll) break; if(seen.has(f)) continue; seen.add(f);
+    r.classList.add("playing"); r.scrollIntoView({block:"center"}); await playFile(f); r.classList.remove("playing"); await new Promise(x=>setTimeout(x,350)); }
+  delete btn.dataset.on; btn.textContent="▶ 全部依序播放";
+}
+/* 自動檢查音量與長度：幾乎沒有聲音、太短、太長的檔案 */
+async function scanAudio(btn, out){
+  btn.disabled=true; out.textContent="檢查中…";
+  const AC=window.AudioContext||window.webkitAudioContext, ctx=new AC(), bad=[];
+  for(const a of AU){
+    let buf;
+    try{ const r=await fetch(CFG.audioDir+a.file+"?v="+Date.now()); if(!r.ok) continue; buf=await ctx.decodeAudioData(await r.arrayBuffer()); }
+    catch(e){ if(location.protocol==="file:"){ out.textContent="直接開啟檔案時，瀏覽器不允許讀取錄音內容，所以無法自動檢查。請在專案資料夾的終端機執行 python3 -m http.server，再打開 http://localhost:8000/workflow/review.html。"; btn.disabled=false; return; } continue; }
+    const d=buf.getChannelData(0); let peak=0; for(let i=0;i<d.length;i++){ const v=Math.abs(d[i]); if(v>peak) peak=v; }
+    const dur=buf.duration, word=/單詞/.test(a.type);
+    const why = peak<0.02 ? "幾乎沒有聲音" : dur<0.25 ? "太短" : (word&&dur>2.5) ? "太長，可能念了別的字" : (!word&&dur>9) ? "太長" : "";
+    const row=document.querySelector(`#view .arow[data-file="${a.file}"]`);
+    if(why){ bad.push(a.file); document.querySelectorAll(`#view .arow[data-file="${a.file}"] .flag`).forEach(f=>{ f.textContent=why; f.classList.remove("hide"); }); }
+  }
+  out.replaceChildren(bad.length ? `有 ${bad.length} 個檔案可能有問題（已在下方標出）：${bad.join("、")}　` : "檢查完成，沒有發現沒有聲音或長度異常的檔案。這不代表發音都清楚，仍然需要用耳朵聽。",
+    bad.length ? el("button",{onclick:()=>{ bad.forEach(f=>{ const r=document.querySelector(`#view .arow[data-file="${f}"]`); r&&r.__mark(); }); }},"把這些全部標記重做") : null);
+  btn.disabled=false;
+}
+function renderAudio(v){
+  const allBtn=el("button",{class:"pri",id:"playAll"},"▶ 全部依序播放"), scanBtn=el("button",{id:"scan"},"自動檢查音量"), scanOut=el("p",{class:"muted",id:"scanOut"});
+  allBtn.addEventListener("click",()=>playAll(allBtn)); scanBtn.addEventListener("click",()=>scanAudio(scanBtn,scanOut));
+  v.append(el("div",{class:"bar"}, allBtn, scanBtn), scanOut);
+  v.append(el("p",{class:"muted",id:"audioStat"},"讀取中…"),
+    el("p",{},"最需要仔細聽的是第二部分：每一組的兩個詞只差一個音，合成語音必須把差別念清楚；「一樣」的題目，兩次錄音應該聽起來是同一個詞，但不是完全相同的聲音。"));
+  v.append(el("h2",{},"第二部分：詞對（按「▶ 整組」會依測驗的順序連續播放兩個詞）"));
+  for(const it of G.B_practice.concat(G.B)){
+    const f1="w_"+it.w1+".mp3", f2=it.answer==="same"?"w_"+it.w1+"_2.mp3":"w_"+it.w2+".mp3";
+    const both=el("button",{class:"pri"},"▶ 整組");
+    both.addEventListener("click",async()=>{ both.disabled=true; await playFile(f1); await new Promise(r=>setTimeout(r,600)); await playFile(f2); both.disabled=false; });
+    v.append(el("div",{class:"pairrow","data-item":it.id}, el("h4",{}, `${it.id}　${it.answer==="same"?"一樣":"不一樣"}`, el("small",{}, it.contrast||it.cat||""), both), arow(f1), arow(f2)));
+  }
+  const pairFiles=new Set(G.B_practice.concat(G.B).flatMap(it=>["w_"+it.w1+".mp3", it.answer==="same"?"w_"+it.w1+"_2.mp3":"w_"+it.w2+".mp3"]));
+  const rest=t=>AU.filter(a=>a.type===t && !pairFiles.has(a.file));
+  v.append(el("h2",{},"其他單詞（第一部分）"), el("div",{class:"alist"}, rest("單詞").map(a=>arow(a.file))));
+  v.append(el("h2",{},"句子（第三部分）"), el("div",{class:"alist"}, rest("句子").map(a=>arow(a.file))));
+  v.append(el("h2",{},"中文說明"), el("div",{class:"alist"}, rest("中文說明").map(a=>arow(a.file))));
+}
 function applyFilter(t,file){
   const p=state[file].present, r=marks[file]!=null;
   const show = filter==="全部" || (filter==="缺圖"&&p===false) || (filter==="已有"&&p===true) || (filter==="標記重做"&&r);
@@ -82,7 +167,7 @@ function applyFilter(t,file){
 }
 function stats(){
   const vals=Object.values(state), have=vals.filter(s=>s.present===true).length, miss=vals.filter(s=>s.present===false).length;
-  $("stat").replaceChildren(...[["全部",M.length],["已有",have],["缺圖",miss],["標記重做",Object.keys(marks).length]].map(([k,v])=>el("div",{"data-stat":k},el("b",{},String(v)),k)));
+  $("stat").replaceChildren(...[["圖片",M.length],["已有",have],["缺圖",miss],["標記重做",Object.keys(marks).length]].map(([k,v])=>el("div",{"data-stat":k},el("b",{},String(v)),k)));
 }
 function render(){
   const v=$("view"); v.replaceChildren();
@@ -93,26 +178,30 @@ function render(){
   } else if (tab==="A"){
     for (const it of G.A_practice.concat(G.A)) v.append(el("div",{class:"group"}, el("h3",{},`${it.id}　播放：${it.target}${it.contrast?"　對比 "+it.contrast:""}`),
       el("div",{class:"set"}, it.options.map(o=>tile("w_"+o.w+".jpg",o.role)))));
+  } else if (tab==="audio"){
+    renderAudio(v);
   } else {
     for (const it of G.C_practice.concat(G.C)) v.append(el("div",{class:"group"}, el("h3",{},`${it.id}　${it.sentence}`),
       el("div",{class:"set"}, it.options.map(o=>tile(o.img+".jpg",o.role)))));
   }
 }
 function bars(){
-  $("tabs").replaceChildren(...[["all","全部圖片"],["A","A 題組檢視（四張並排）"],["C","C 題組檢視（四張並排）"]].map(([k,n])=>el("button",{class:tab===k?"on":"",onclick:()=>{tab=k;bars();render();}},n)));
+  $("tabs").replaceChildren(...[["all","全部圖片"],["A","A 題組檢視（四張並排）"],["C","C 題組檢視（四張並排）"],["audio","錄音試聽"]].map(([k,n])=>el("button",{class:tab===k?"on":"",onclick:()=>{tab=k;bars();render();}},n)));
   $("filters").replaceChildren(...(tab==="all"?["全部","缺圖","已有","標記重做"]:[]).map(n=>el("button",{class:filter===n?"on":"",onclick:()=>{filter=n;bars();render();}},n)));
 }
-function redoRows(){ return Object.keys(marks).sort().map(f=>({file:f, description:(byFile[f]||{}).description||"", variation:(byFile[f]||{}).variation||"", reason:marks[f]||""})); }
+function redoRows(){ return Object.keys(marks).sort().map(f=>({file:f, description:(byFile[f]||{}).description||(byAudio[f]?"錄音："+byAudio[f].text:""), variation:(byFile[f]||{}).variation||"", reason:marks[f]||""})); }
 $("dl").addEventListener("click",()=>{
   const rows=redoRows(); if(!rows.length){ $("msg").textContent="目前沒有標記任何圖片。"; return; }
   const esc=v=>/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
   const text="﻿file,description,variation,reason\n"+rows.map(r=>[r.file,r.description,r.variation,r.reason].map(esc).join(",")).join("\n");
   const a=el("a",{href:URL.createObjectURL(new Blob([text],{type:"text/csv"})),download:"redo-list.csv"}); document.body.append(a); a.click(); a.remove();
-  $("msg").textContent=`已下載 ${rows.length} 張的重做清單，請放到 workflow/ 資料夾。`;
+  const na=rows.filter(r=>/\.mp3$/.test(r.file)).length;
+  $("msg").textContent=`已下載重做清單（圖片 ${rows.length-na} 張、錄音 ${na} 個），請放到 workflow/ 資料夾。`+(na?"錄音請執行 python3 workflow/make_audio.py --redo workflow/redo-list.csv":"");
 });
 $("copy").addEventListener("click",async()=>{
   const rows=redoRows(); if(!rows.length){ $("msg").textContent="目前沒有標記任何圖片。"; return; }
-  const text="請依 workflow/IMAGE_BRIEF.md 的規範重做以下圖片，只動這些檔案：\n"+rows.map(r=>`- ${r.file}：${r.description}${r.reason?"（重做原因："+r.reason+"）":""}`).join("\n");
+  const imgs=rows.filter(r=>!/\.mp3$/.test(r.file)); if(!imgs.length){ $("msg").textContent="清單裡沒有圖片。錄音請用下載的重做清單執行 make_audio.py --redo。"; return; }
+  const text="請依 workflow/IMAGE_BRIEF.md 的規範重做以下圖片，只動這些檔案：\n"+imgs.map(r=>`- ${r.file}：${r.description}${r.reason?"（重做原因："+r.reason+"）":""}`).join("\n");
   try{ await navigator.clipboard.writeText(text); $("msg").textContent="已複製。"; }catch(e){ $("msg").textContent="無法複製，請改用下載。"; }
 });
 $("clear").addEventListener("click",()=>{ marks={}; save(); stats(); render(); });
