@@ -9,7 +9,7 @@ window.GATE_CONFIG = {
   REGISTRATION_OPEN: true,
 
   /* 結果頁「預約諮詢」按鈕要連到的網址。留空就不顯示按鈕。 */
-  BOOKING_URL: "https://script.google.com/macros/s/AKfycbwhmaOKIXdMT6dPmGQXUNwfJrpupz6NrDhHqfXPc1O5EF2Gt_xGHCLauhkxS5PGBQREXg/exec",
+  BOOKING_URL: "https://calendar.app.google/kJyy1FSA9iA21gHP7",
 
   /* 顯示在頁面上的聯絡信箱，家長遇到問題或想刪除資料時使用。留空就不顯示。 */
   CONTACT_EMAIL: "david_hsu@me.com",
